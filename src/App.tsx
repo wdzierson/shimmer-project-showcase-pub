@@ -27,15 +27,20 @@ const App = () => {
           console.log('Database setup complete:', data);
         }
         
-        // If OpenAI API key is not set, remind the user
-        const { data: secrets } = await supabase.functions.listSecrets();
-        if (!secrets?.includes('OPENAI_API_KEY')) {
-          toast.warning(
-            'OpenAI API key is not configured. Some AI features might not work properly.',
-            {
-              duration: 8000,
-            }
-          );
+        // Check if OpenAI API key is set
+        try {
+          // Using a safer approach to check API key status
+          const { error: checkError } = await supabase.functions.invoke('check-openai-key');
+          if (checkError) {
+            toast.warning(
+              'OpenAI API key is not configured. Some AI features might not work properly.',
+              {
+                duration: 8000,
+              }
+            );
+          }
+        } catch (error) {
+          console.error('Error checking OpenAI key:', error);
         }
       } catch (error) {
         console.error('Error in setup process:', error);

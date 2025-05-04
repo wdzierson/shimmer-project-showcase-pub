@@ -181,7 +181,7 @@ const ProjectEditor = () => {
         const embeddings = await createEmbeddings(contentData);
         
         if (embeddings) {
-          // Store embeddings
+          // Store embeddings - specify the correct type for the embedding field
           const { error: embeddingError } = await supabase
             .from('project_embeddings')
             .upsert({
