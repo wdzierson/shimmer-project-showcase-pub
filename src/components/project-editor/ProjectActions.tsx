@@ -19,7 +19,7 @@ const ProjectActions = ({
       <Button variant="outline" type="button" onClick={onCancel}>
         Cancel
       </Button>
-      <Button type="submit">
+      <Button type="submit" onClick={(e) => onSubmit(e)}>
         <Check className="mr-2 h-4 w-4" />
         {isNew ? 'Create Project' : 'Update Project'}
       </Button>

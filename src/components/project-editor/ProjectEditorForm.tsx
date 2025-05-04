@@ -1,14 +1,12 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
-import { toast } from 'sonner';
 import { Project } from '@/components/project/ProjectCard';
 import ProjectBasicInfoFields from './ProjectBasicInfoFields';
 import ProjectDescriptionField from './ProjectDescriptionField';
 import ProjectImageUpload from './ProjectImageUpload';
 import ProjectTagsField from './ProjectTagsField';
 import ProjectUrlField from './ProjectUrlField';
+import ProjectActions from './ProjectActions';
 
 interface ProjectEditorFormProps {
   isNew: boolean;
@@ -91,15 +89,11 @@ const ProjectEditorForm = ({
         handleRemoveTag={handleRemoveTag}
       />
       
-      <div className="flex justify-end space-x-4 pt-4">
-        <Button variant="outline" type="button" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit">
-          <Check className="mr-2 h-4 w-4" />
-          {isNew ? 'Create Project' : 'Update Project'}
-        </Button>
-      </div>
+      <ProjectActions
+        isNew={isNew}
+        onCancel={onCancel}
+        onSubmit={onSubmit}
+      />
     </form>
   );
 };
