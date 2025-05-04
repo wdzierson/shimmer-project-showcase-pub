@@ -12,20 +12,78 @@ export interface ChatCompletionRequest {
 }
 
 export async function getChatCompletion(request: ChatCompletionRequest): Promise<string> {
-  // This is a placeholder that will be replaced with actual OpenAI API call via Supabase Edge Functions
-  console.log('OpenAI request would be sent with:', request);
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("This is a placeholder response. Once connected to OpenAI via Supabase, this would return a real response based on your portfolio project data.");
-    }, 1000);
-  });
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`OpenAI API returned status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.generatedText || "I couldn't find relevant information about that.";
+  } catch (error) {
+    console.error('Error getting chat completion:', error);
+    return "Sorry, I encountered an error while processing your request.";
+  }
 }
 
 export async function createEmbeddings(text: string): Promise<number[]> {
-  // This is a placeholder that will be replaced with actual OpenAI embeddings API call
-  console.log('OpenAI embeddings would be created for:', text);
-  
-  // Return a mock embedding vector (would be much larger in reality)
-  return Array(8).fill(0).map(() => Math.random());
+  try {
+    const response = await fetch('/api/generate-embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Embeddings API returned status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.embedding;
+  } catch (error) {
+    console.error('Error creating embeddings:', error);
+    // Return a mock embedding for fallback (would be removed in production)
+    return Array(1536).fill(0).map(() => Math.random() * 0.01);
+  }
+}
+
+export async function generateEmbeddings(text: string): Promise<number[]> {
+  return createEmbeddings(text);
+}
+
+export async function searchSimilarProjects(query: string): Promise<any[]> {
+  try {
+    const queryEmbedding = await createEmbeddings(query);
+    
+    const response = await fetch('/api/search-projects', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        embedding: queryEmbedding,
+        threshold: 0.7,
+        limit: 5 
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Search API returned status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.projects || [];
+  } catch (error) {
+    console.error('Error searching projects:', error);
+    return [];
+  }
 }

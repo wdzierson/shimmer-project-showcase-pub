@@ -6,28 +6,8 @@ import { Send } from 'lucide-react';
 import ProjectThumbnails from '@/components/project/ProjectThumbnails';
 import ProjectDetail from '@/components/project/ProjectDetail';
 import { Project } from '@/components/project/ProjectCard';
-
-// Temporary mock data until Supabase is connected
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    title: 'Expert Physician Portal',
-    client: 'Included Health',
-    description: 'Physicians needed to evaluate patient conditions and make recommendations across a telehealth platform.',
-    imageUrl: '/lovable-uploads/85dd7d76-7e5f-4f35-a79f-ab99dd1c1202.png',
-    tags: ['UX Research', 'UI Design', 'Healthcare'],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '2',
-    title: 'Health Bridge Platform',
-    client: 'HealthBridge',
-    description: 'A platform connecting patients with healthcare providers for seamless virtual care experiences.',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3',
-    tags: ['UI Design', 'Frontend Development', 'Telehealth'],
-    createdAt: '2023-03-22',
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { generateEmbeddings, searchSimilarProjects, getChatCompletion } from '@/services/openai';
 
 interface Message {
   id: string;
@@ -35,6 +15,7 @@ interface Message {
   sender: 'user' | 'bot';
   timestamp: Date;
   showProjects?: boolean;
+  projects?: Project[];
 }
 
 const ChatInterface = () => {
@@ -48,6 +29,7 @@ const ChatInterface = () => {
     }
   ]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -63,7 +45,53 @@ const ChatInterface = () => {
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Helper function to fetch projects from Supabase
+  const fetchProjects = async (projectIds?: string[]): Promise<Project[]> => {
+    try {
+      let query = supabase
+        .from('projects')
+        .select(`
+          id,
+          title,
+          client,
+          description,
+          created_at,
+          project_images (image_url, is_primary),
+          project_tags (
+            tags (name)
+          )
+        `)
+        .eq('visible', true);
+        
+      // If specific projectIds are provided, filter by them
+      if (projectIds && projectIds.length > 0) {
+        query = query.in('id', projectIds);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching projects:', error);
+        return [];
+      }
+      
+      // Transform data to match Project type
+      return data.map(item => ({
+        id: item.id,
+        title: item.title,
+        client: item.client,
+        description: item.description,
+        imageUrl: item.project_images.find((img: any) => img.is_primary)?.image_url || '',
+        tags: item.project_tags.map((tag: any) => tag.tags.name),
+        createdAt: item.created_at
+      }));
+    } catch (error) {
+      console.error('Error in fetchProjects:', error);
+      return [];
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!message.trim()) return;
@@ -78,9 +106,9 @@ const ChatInterface = () => {
     
     setMessages((prev) => [...prev, userMessage]);
     setMessage('');
+    setIsLoading(true);
     
-    // Process the message and provide a response
-    setTimeout(() => {
+    try {
       let botResponse: Message;
       
       // Check for the "show me recent work" command
@@ -88,25 +116,75 @@ const ChatInterface = () => {
           message.toLowerCase().includes('show projects') ||
           message.toLowerCase().includes('portfolio') ||
           message.toLowerCase().includes('work examples')) {
+        
+        const projects = await fetchProjects();
+        
         botResponse = {
           id: (Date.now() + 1).toString(),
           content: "Here are some of my recent projects. Click on any of them to learn more:",
           sender: 'bot',
           timestamp: new Date(),
           showProjects: true,
+          projects
         };
       } else {
-        // This will be replaced with actual OpenAI integration
-        botResponse = {
-          id: (Date.now() + 1).toString(),
-          content: "Thanks for your message! Once connected to OpenAI and Supabase, I'll be able to provide specific information about my work experience and projects. Try typing 'show me recent work' to see my portfolio projects.",
-          sender: 'bot',
-          timestamp: new Date(),
-        };
+        // Try to use RAG to find relevant projects
+        const similarProjects = await searchSimilarProjects(message);
+        
+        if (similarProjects && similarProjects.length > 0) {
+          // Get project IDs to fetch full project data
+          const projectIds = similarProjects.map(p => p.project_id);
+          const projects = await fetchProjects(projectIds);
+          
+          // Use OpenAI to generate a response based on the relevant projects
+          const context = similarProjects.map(p => p.content).join('\n');
+          const aiResponse = await getChatCompletion({
+            messages: [
+              {
+                role: 'system',
+                content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question: ${context}`
+              },
+              {
+                role: 'user',
+                content: message
+              }
+            ],
+            model: 'gpt-4o-mini'
+          });
+          
+          botResponse = {
+            id: (Date.now() + 1).toString(),
+            content: aiResponse,
+            sender: 'bot',
+            timestamp: new Date(),
+            projects: projects.length > 0 ? projects : undefined,
+            showProjects: projects.length > 0
+          };
+        } else {
+          botResponse = {
+            id: (Date.now() + 1).toString(),
+            content: "I don't have specific information about that in my projects. Would you like to see my recent work instead?",
+            sender: 'bot',
+            timestamp: new Date(),
+          };
+        }
       }
       
       setMessages((prev) => [...prev, botResponse]);
-    }, 800);
+    } catch (error) {
+      console.error('Error processing message:', error);
+      
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm sorry, I encountered an error processing your request. Please try again.",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, errorResponse]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleProjectSelect = (project: Project) => {
@@ -137,14 +215,21 @@ const ChatInterface = () => {
                     })}
                   </div>
                 
-                  {msg.showProjects && (
+                  {msg.showProjects && msg.projects && (
                     <div className="my-12">
-                      <ProjectThumbnails projects={mockProjects} onSelect={handleProjectSelect} />
+                      <ProjectThumbnails projects={msg.projects} onSelect={handleProjectSelect} />
                     </div>
                   )}
                 </div>
               </div>
             ))}
+            {isLoading && (
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
           
@@ -161,8 +246,14 @@ const ChatInterface = () => {
                   handleSubmit(e);
                 }
               }}
+              disabled={isLoading}
             />
-            <Button type="submit" size="icon" className="h-auto bg-transparent hover:bg-transparent text-foreground">
+            <Button 
+              type="submit" 
+              size="icon" 
+              className="h-auto bg-transparent hover:bg-transparent text-foreground"
+              disabled={isLoading}
+            >
               <Send size={24} />
             </Button>
           </form>
