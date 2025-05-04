@@ -10,6 +10,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("generate-embeddings function called");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -17,9 +19,10 @@ serve(async (req) => {
 
   try {
     const { text } = await req.json();
-    console.log('Received request to generate embeddings for text:', text.substring(0, 50) + '...');
+    console.log('Received request to generate embeddings for text:', text?.substring(0, 50) + '...');
 
     if (!text) {
+      console.error('Text is required');
       return new Response(
         JSON.stringify({ error: 'Text is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

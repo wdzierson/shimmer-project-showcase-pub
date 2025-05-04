@@ -164,7 +164,6 @@ export const saveProject = async ({
       console.log('Generating content for embeddings...');
       
       // Generate content by directly concatenating project data with tags
-      // This ensures we always have content without relying on DB function
       const contentData = `${title} ${client} ${description} ${tags.join(' ')}`;
       
       if (contentData) {
@@ -183,7 +182,7 @@ export const saveProject = async ({
             .eq('project_id', projectId)
             .limit(1);
             
-          // Store embeddings - the embedding is now a JSON string as expected by the database
+          // Store embeddings - ensure embedding is a JSON string
           if (existingEmbedding && existingEmbedding.length > 0) {
             // Update existing embedding
             const { error: embeddingError } = await supabase
@@ -196,6 +195,7 @@ export const saveProject = async ({
               
             if (embeddingError) {
               console.error('Error updating embeddings:', embeddingError);
+              toast.error('Error updating project embeddings, search functionality may be limited.');
               // Continue even if embeddings fail - don't block the user
             }
           } else {
@@ -210,6 +210,7 @@ export const saveProject = async ({
               
             if (embeddingError) {
               console.error('Error saving embeddings:', embeddingError);
+              toast.error('Error saving project embeddings, search functionality may be limited.');
               // Continue even if embeddings fail - don't block the user
             }
           }
@@ -217,6 +218,7 @@ export const saveProject = async ({
       }
     } catch (embeddingError) {
       console.error('Error with embeddings process:', embeddingError);
+      toast.error('Error processing project embeddings, search functionality may be limited.');
       // We don't want embedding errors to prevent project saving
     }
     

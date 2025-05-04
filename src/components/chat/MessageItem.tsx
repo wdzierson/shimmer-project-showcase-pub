@@ -11,12 +11,19 @@ interface MessageItemProps {
 
 const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
   return (
-    <div className="w-full">
+    <div className="w-full mb-10">
       <div className={`max-w-4xl ${message.sender === 'user' ? 'ml-auto' : 'mr-auto'}`}>
-        <p className={`${message.sender === 'user' ? 'chat-message-user text-right' : 'chat-message'}`}>
-          {message.content}
-        </p>
-        <div className={`text-sm opacity-50 mt-2 mono ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+        <div className={`p-4 rounded-lg ${
+          message.sender === 'user' 
+            ? 'bg-primary/10 text-right ml-auto' 
+            : 'bg-muted/50 text-left mr-auto'
+        }`}>
+          <p className="text-foreground leading-relaxed">
+            {message.content}
+          </p>
+        </div>
+        
+        <div className={`text-xs text-muted-foreground mt-2 font-mono ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
           {message.timestamp.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
@@ -24,7 +31,8 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
         </div>
       
         {message.showProjects && message.projects && message.projects.length > 0 && (
-          <div className="my-12">
+          <div className="mt-6 mb-4">
+            <h3 className="text-sm font-medium mb-3 text-muted-foreground">Related projects:</h3>
             <ProjectThumbnails projects={message.projects} onSelect={onProjectSelect} />
           </div>
         )}

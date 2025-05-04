@@ -9,16 +9,19 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("search-projects function called");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { embedding, threshold = 0.6, limit = 5 } = await req.json();
+    const { embedding, threshold = 0.5, limit = 5 } = await req.json();
     console.log('Received request to search for similar projects');
 
     if (!embedding) {
+      console.error('Embedding vector is required');
       return new Response(
         JSON.stringify({ error: 'Embedding vector is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -56,7 +59,11 @@ serve(async (req) => {
       throw new Error(`Database error: ${error.message}`);
     }
 
-    console.log('Found similar projects:', similarProjects?.length || 0);
+    if (!similarProjects || similarProjects.length === 0) {
+      console.log('No similar projects found');
+    } else {
+      console.log('Found similar projects:', similarProjects.length);
+    }
     
     return new Response(
       JSON.stringify({ projects: similarProjects || [] }),

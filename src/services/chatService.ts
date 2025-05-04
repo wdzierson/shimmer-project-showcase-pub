@@ -64,13 +64,11 @@ export const processUserMessage = async (
   console.log('Processing user message:', userMessage);
   
   // Check for the "show me recent work" or similar commands
+  const showProjectsRegex = /show\s+(?:me\s+)?(?:recent\s+)?(?:work|projects?|portfolio)/i;
   if (
-    userMessage.toLowerCase().includes('recent work') ||
-    userMessage.toLowerCase().includes('show project') ||
+    showProjectsRegex.test(userMessage.toLowerCase()) ||
     userMessage.toLowerCase().includes('portfolio') ||
-    userMessage.toLowerCase().includes('work example') ||
-    userMessage.toLowerCase().includes('recent project') ||
-    userMessage.toLowerCase().includes('show me project')
+    userMessage.toLowerCase().includes('work example')
   ) {
     console.log('User is asking to see projects, fetching all projects');
     const projects = await fetchProjects();
@@ -92,43 +90,61 @@ export const processUserMessage = async (
   
   // Try to use RAG to find relevant projects
   console.log('Attempting to find relevant projects using RAG');
-  const similarProjects = await searchSimilarProjects(userMessage);
+  try {
+    const similarProjects = await searchSimilarProjects(userMessage);
+    
+    if (similarProjects && similarProjects.length > 0) {
+      console.log(`Found ${similarProjects.length} similar projects via RAG`);
+      
+      // Get project IDs to fetch full project data
+      const projectIds = similarProjects.map(p => p.project_id);
+      const projects = await fetchProjects(projectIds);
+      
+      if (projects.length > 0) {
+        // Use OpenAI to generate a response based on the relevant projects
+        const context = similarProjects.map(p => p.content).join('\n\n');
+        console.log('Generating AI response with context from similar projects');
+        
+        const aiResponse = await getChatCompletion({
+          messages: [
+            {
+              role: 'system',
+              content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question: ${context}`
+            },
+            {
+              role: 'user',
+              content: userMessage
+            }
+          ],
+          model: 'gpt-4o-mini'
+        });
+        
+        return {
+          content: aiResponse,
+          projects,
+          showProjects: true
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error during RAG process:', error);
+  }
   
-  if (similarProjects && similarProjects.length > 0) {
-    console.log(`Found ${similarProjects.length} similar projects via RAG`);
-    
-    // Get project IDs to fetch full project data
-    const projectIds = similarProjects.map(p => p.project_id);
-    const projects = await fetchProjects(projectIds);
-    
-    // Use OpenAI to generate a response based on the relevant projects
-    const context = similarProjects.map(p => p.content).join('\n\n');
-    console.log('Generating AI response with context from similar projects');
-    
-    const aiResponse = await getChatCompletion({
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question: ${context}`
-        },
-        {
-          role: 'user',
-          content: userMessage
-        }
-      ],
-      model: 'gpt-4o-mini'
-    });
-    
+  // If no similar projects found via RAG or if an error occurred
+  console.log('No similar projects found via RAG or an error occurred, fetching all projects instead');
+  const allProjects = await fetchProjects();
+  
+  if (allProjects.length > 0) {
     return {
-      content: aiResponse,
-      projects: projects.length > 0 ? projects : undefined,
-      showProjects: projects.length > 0
+      content: "I don't have specific information about that in my projects, but here are some of my recent works that might interest you:",
+      projects: allProjects,
+      showProjects: true
     };
   }
   
-  // If no similar projects found via RAG
-  console.log('No similar projects found via RAG');
+  // If no projects available at all
   return {
-    content: "I don't have specific information about that in my projects. Would you like to see my recent work instead?",
+    content: "I don't have specific information about that in my projects. Would you like to see my recent work instead? Just type 'show me recent work'.",
+    showProjects: false
   };
 };

@@ -15,10 +15,11 @@ export async function getChatCompletion(request: ChatCompletionRequest): Promise
   try {
     console.log('Getting chat completion with model:', request.model);
     
-    const response = await fetch('/api/chat', {
+    const response = await fetch('https://uilvozcryifnpldfpwiz.supabase.co/functions/v1/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnon}`,
       },
       body: JSON.stringify(request),
     });
@@ -35,14 +36,18 @@ export async function getChatCompletion(request: ChatCompletionRequest): Promise
   }
 }
 
+// Supabase anon key for edge function calls
+const supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbHZvemNyeWlmbnBsZGZwd2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzOTYxMzAsImV4cCI6MjA2MTk3MjEzMH0.7W6t2His-58Hm25fKpaMVkIZ94p4QL39fbg352l-t1Q';
+
 export async function generateEmbeddings(text: string): Promise<number[]> {
   try {
     console.log('Generating embeddings for text:', text.substring(0, 50) + '...');
     
-    const response = await fetch('/api/generate-embeddings', {
+    const response = await fetch('https://uilvozcryifnpldfpwiz.supabase.co/functions/v1/generate-embeddings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnon}`,
       },
       body: JSON.stringify({ text }),
     });
@@ -80,20 +85,23 @@ export async function searchSimilarProjects(query: string): Promise<any[]> {
     // Generate embedding for the query
     const embedding = await generateEmbeddings(query);
     
-    const response = await fetch('/api/search-projects', {
+    // Use embedding to search for similar projects
+    const response = await fetch('https://uilvozcryifnpldfpwiz.supabase.co/functions/v1/search-projects', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnon}`,
       },
       body: JSON.stringify({ 
         embedding, 
-        threshold: 0.6, // Lower threshold to get more results
+        threshold: 0.5, // Lower threshold to get more results
         limit: 5 
       }),
     });
     
     if (!response.ok) {
-      throw new Error(`Search API returned status ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Search API returned status ${response.status}: ${errorText}`);
     }
     
     const data = await response.json();
