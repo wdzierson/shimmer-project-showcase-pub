@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Project } from '@/components/project/ProjectCard';
@@ -8,43 +9,84 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { createEmbeddings } from '@/services/openai';
 
-// Mock data for projects (will be replaced with Supabase data)
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    title: 'Expert Physician Portal',
-    client: 'Included Health',
-    description: 'Physicians needed to evaluate patient conditions and make recommendations across a telehealth platform.',
-    imageUrl: '/lovable-uploads/e818c6cd-0b7f-4e5a-a8b8-5a83f891d04c.png',
-    tags: ['UX Research', 'UI Design', 'Healthcare'],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '2',
-    title: 'Health Bridge Platform',
-    client: 'HealthBridge',
-    description: 'A platform connecting patients with healthcare providers for seamless virtual care experiences.',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3',
-    tags: ['UI Design', 'Frontend Development', 'Telehealth'],
-    createdAt: '2023-03-22',
-  },
-];
-
 const ProjectEditor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
   const isNew = id === 'new';
-  const existingProject = isNew ? null : mockProjects.find(p => p.id === id);
   
-  const [title, setTitle] = useState(existingProject?.title || '');
-  const [client, setClient] = useState(existingProject?.client || '');
-  const [description, setDescription] = useState(existingProject?.description || '');
-  const [imageUrl, setImageUrl] = useState(existingProject?.imageUrl || '');
+  // State for project data
+  const [title, setTitle] = useState('');
+  const [client, setClient] = useState('');
+  const [description, setDescription] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [liveUrl, setLiveUrl] = useState('');
   const [involvement, setInvolvement] = useState('');
-  const [tags, setTags] = useState<string[]>(existingProject?.tags || []);
+  const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
+  const [loading, setLoading] = useState(true);
+  
+  // Load existing project data if editing
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      if (isNew) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        // Fetch project data
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (projectError) throw projectError;
+        if (!projectData) {
+          toast.error('Project not found');
+          navigate('/admin/projects');
+          return;
+        }
+        
+        // Set project basic data
+        setTitle(projectData.title);
+        setClient(projectData.client);
+        setDescription(projectData.description);
+        
+        // Fetch primary image
+        const { data: imageData } = await supabase
+          .from('project_images')
+          .select('image_url')
+          .eq('project_id', id)
+          .eq('is_primary', true)
+          .single();
+          
+        if (imageData) {
+          setImageUrl(imageData.image_url);
+        }
+        
+        // Fetch tags
+        const { data: tagData } = await supabase
+          .from('project_tags')
+          .select('tags(name)')
+          .eq('project_id', id);
+          
+        if (tagData) {
+          const tagNames = tagData.map(item => item.tags.name);
+          setTags(tagNames);
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        toast.error('Failed to load project data');
+        setLoading(false);
+      }
+    };
+    
+    fetchProjectData();
+  }, [id, isNew, navigate]);
   
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -70,7 +112,7 @@ const ProjectEditor = () => {
       toast.info('Saving project...');
       
       // Create or update project in Supabase
-      const projectId = isNew ? uuidv4() : (id || '');
+      const projectId = isNew ? uuidv4() : id;
       const projectData = {
         id: projectId,
         title,
@@ -213,31 +255,37 @@ const ProjectEditor = () => {
       <div className="container mx-auto py-8 px-4">
         <ProjectEditorHeader isNew={isNew} />
         
-        <div className="max-w-3xl">
-          <ProjectEditorForm
-            isNew={isNew}
-            title={title}
-            setTitle={setTitle}
-            client={client}
-            setClient={setClient}
-            description={description}
-            setDescription={setDescription}
-            imageUrl={imageUrl}
-            setImageUrl={setImageUrl}
-            liveUrl={liveUrl}
-            setLiveUrl={setLiveUrl}
-            involvement={involvement}
-            setInvolvement={setInvolvement}
-            tags={tags}
-            setTags={setTags}
-            newTag={newTag}
-            setNewTag={setNewTag}
-            handleAddTag={handleAddTag}
-            handleRemoveTag={handleRemoveTag}
-            onCancel={handleCancel}
-            onSubmit={handleSubmit}
-          />
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-muted-foreground">Loading project data...</div>
+          </div>
+        ) : (
+          <div className="max-w-3xl">
+            <ProjectEditorForm
+              isNew={isNew}
+              title={title}
+              setTitle={setTitle}
+              client={client}
+              setClient={setClient}
+              description={description}
+              setDescription={setDescription}
+              imageUrl={imageUrl}
+              setImageUrl={setImageUrl}
+              liveUrl={liveUrl}
+              setLiveUrl={setLiveUrl}
+              involvement={involvement}
+              setInvolvement={setInvolvement}
+              tags={tags}
+              setTags={setTags}
+              newTag={newTag}
+              setNewTag={setNewTag}
+              handleAddTag={handleAddTag}
+              handleRemoveTag={handleRemoveTag}
+              onCancel={handleCancel}
+              onSubmit={handleSubmit}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
