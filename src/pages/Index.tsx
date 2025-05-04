@@ -1,7 +1,6 @@
 
 import React from 'react';
 import ChatInterface from '@/components/chat/ChatInterface';
-import AdminButton from '@/components/admin/AdminButton';
 
 const Index = () => {
   return (
@@ -12,8 +11,6 @@ const Index = () => {
       <div className="flex-grow flex items-stretch">
         <ChatInterface />
       </div>
-      {/* Admin access button in the bottom right */}
-      <AdminButton />
     </div>
   );
 };
