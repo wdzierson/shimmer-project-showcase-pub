@@ -30,6 +30,7 @@ interface ProjectEditorFormProps {
   handleRemoveTag: (tag: string) => void;
   onCancel: () => void;
   onSubmit: (e: React.FormEvent) => void;
+  isSaving?: boolean;
 }
 
 const ProjectEditorForm = ({
@@ -54,6 +55,7 @@ const ProjectEditorForm = ({
   handleRemoveTag,
   onCancel,
   onSubmit,
+  isSaving = false
 }: ProjectEditorFormProps) => {
   return (
     <form onSubmit={onSubmit} className="space-y-6 bg-card shadow-sm border rounded-lg p-6">
@@ -93,6 +95,7 @@ const ProjectEditorForm = ({
         isNew={isNew}
         onCancel={onCancel}
         onSubmit={onSubmit}
+        isSaving={isSaving}
       />
     </form>
   );

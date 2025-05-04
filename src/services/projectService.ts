@@ -22,6 +22,8 @@ export const saveProject = async ({
   client,
   description,
   imageUrl,
+  liveUrl = '',
+  involvement = '',
   tags,
   isNew
 }: ProjectSubmitData) => {
@@ -43,7 +45,9 @@ export const saveProject = async ({
       description,
       year: new Date().getFullYear(),
       updated_at: new Date().toISOString(),
-      ...(isNew && { created_at: new Date().toISOString() })
+      ...(isNew && { created_at: new Date().toISOString() }),
+      ...(liveUrl && { liveUrl }),
+      ...(involvement && { involvement })
     };
     
     // Insert or update project
@@ -135,30 +139,35 @@ export const saveProject = async ({
       }
     }
     
-    // Generate content for embeddings
-    const { data: contentData } = await supabase.rpc('generate_project_content_for_embeddings', {
-      project_id: projectId
-    });
-    
-    if (contentData) {
-      // Generate embeddings using OpenAI
-      const embeddings = await createEmbeddings(contentData);
+    try {
+      // Generate content for embeddings - wrap in try/catch so it doesn't block project saving if it fails
+      const { data: contentData } = await supabase.rpc('generate_project_content_for_embeddings', {
+        project_id: projectId
+      });
       
-      if (embeddings) {
-        // Store embeddings - the embedding is now a JSON string as expected by the database
-        const { error: embeddingError } = await supabase
-          .from('project_embeddings')
-          .upsert({
-            project_id: projectId,
-            content: contentData,
-            embedding: embeddings
-          });
-          
-        if (embeddingError) {
-          console.error('Error saving embeddings:', embeddingError);
-          // Continue even if embeddings fail - don't block the user
+      if (contentData) {
+        // Generate embeddings using OpenAI
+        const embeddings = await createEmbeddings(contentData);
+        
+        if (embeddings) {
+          // Store embeddings - the embedding is now a JSON string as expected by the database
+          const { error: embeddingError } = await supabase
+            .from('project_embeddings')
+            .upsert({
+              project_id: projectId,
+              content: contentData,
+              embedding: embeddings
+            });
+            
+          if (embeddingError) {
+            console.error('Error saving embeddings:', embeddingError);
+            // Continue even if embeddings fail - don't block the user
+          }
         }
       }
+    } catch (embeddingError) {
+      console.error('Error with embeddings process:', embeddingError);
+      // We don't want embedding errors to prevent project saving
     }
     
     toast.success(`Project ${isNew ? 'created' : 'updated'} successfully!`);

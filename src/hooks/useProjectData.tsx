@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface ProjectFormData {
   title: string;
@@ -41,6 +42,13 @@ export const useProjectData = () => {
       }
       
       try {
+        // Validate that the ID is in UUID format
+        if (!isValidUUID(id)) {
+          toast.error('Invalid project ID format');
+          navigate('/admin/projects');
+          return;
+        }
+        
         // Fetch project data
         const { data: projectData, error: projectError } = await supabase
           .from('projects')
@@ -78,9 +86,19 @@ export const useProjectData = () => {
           .select('tags(name)')
           .eq('project_id', id);
           
-        if (tagData) {
+        if (tagData && tagData.length > 0) {
           const tagNames = tagData.map(item => item.tags.name);
           setTags(tagNames);
+        }
+        
+        // Set live URL if available
+        if (projectData.liveUrl) {
+          setLiveUrl(projectData.liveUrl);
+        }
+        
+        // Set involvement if available
+        if (projectData.involvement) {
+          setInvolvement(projectData.involvement);
         }
         
         setLoading(false);
@@ -103,6 +121,12 @@ export const useProjectData = () => {
   
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+  
+  // Helper function to validate UUID format
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
   };
   
   return {

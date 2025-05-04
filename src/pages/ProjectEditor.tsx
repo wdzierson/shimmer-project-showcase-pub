@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
 import ProjectEditorHeader from '@/components/project-editor/ProjectEditorHeader';
 import ProjectEditorForm from '@/components/project-editor/ProjectEditorForm';
 import { useProjectData } from '@/hooks/useProjectData';
@@ -16,23 +17,55 @@ const ProjectEditor = () => {
     navigate
   } = useProjectData();
   
+  const [isSaving, setIsSaving] = useState(false);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const success = await saveProject({
-      id,
-      title: projectData.title,
-      client: projectData.client,
-      description: projectData.description,
-      imageUrl: projectData.imageUrl,
-      liveUrl: projectData.liveUrl,
-      involvement: projectData.involvement,
-      tags: projectData.tags,
-      isNew
-    });
+    if (isSaving) return; // Prevent multiple submissions
     
-    if (success) {
-      navigate('/admin/projects');
+    try {
+      setIsSaving(true);
+      
+      // Validate required fields
+      if (!projectData.title.trim()) {
+        toast.error("Project title is required");
+        setIsSaving(false);
+        return;
+      }
+      
+      if (!projectData.client.trim()) {
+        toast.error("Client name is required");
+        setIsSaving(false);
+        return;
+      }
+      
+      if (!projectData.description.trim()) {
+        toast.error("Project description is required");
+        setIsSaving(false);
+        return;
+      }
+      
+      const success = await saveProject({
+        id,
+        title: projectData.title,
+        client: projectData.client,
+        description: projectData.description,
+        imageUrl: projectData.imageUrl,
+        liveUrl: projectData.liveUrl,
+        involvement: projectData.involvement,
+        tags: projectData.tags,
+        isNew
+      });
+      
+      if (success) {
+        navigate('/admin/projects');
+      }
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast.error('An unexpected error occurred while saving the project');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -73,6 +106,7 @@ const ProjectEditor = () => {
               handleRemoveTag={handleRemoveTag}
               onCancel={handleCancel}
               onSubmit={handleSubmit}
+              isSaving={isSaving}
             />
           </div>
         )}
