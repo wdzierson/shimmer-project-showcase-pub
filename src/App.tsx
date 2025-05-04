@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import AdminProjects from "./pages/AdminProjects"; 
@@ -29,40 +28,14 @@ const App = () => {
           console.log('Database setup complete:', data);
         }
         
-        // Check if OpenAI API key is set
+        // Silently check OpenAI API key without showing toasts
         try {
           const { data: keyData, error: keyError } = await supabase.functions.invoke('check-openai-key');
           
           if (keyError) {
             console.error('Error checking OpenAI key:', keyError);
-            toast.warning(
-              'Error checking OpenAI API key configuration.',
-              {
-                duration: 8000,
-              }
-            );
-          } else if (keyData && keyData.status === 'valid') {
-            console.log('OpenAI API key is valid');
-            toast.success(
-              'OpenAI API key is configured correctly!',
-              {
-                duration: 3000,
-              }
-            );
-          } else if (keyData && keyData.status === 'missing') {
-            toast.warning(
-              'OpenAI API key is not configured. Some AI features might not work properly.',
-              {
-                duration: 8000,
-              }
-            );
-          } else if (keyData && keyData.status === 'invalid') {
-            toast.error(
-              'OpenAI API key is invalid. Please check your API key configuration.',
-              {
-                duration: 8000,
-              }
-            );
+          } else if (keyData) {
+            console.log('OpenAI API key status:', keyData.status);
           }
           
           setIsApiKeyChecked(true);
