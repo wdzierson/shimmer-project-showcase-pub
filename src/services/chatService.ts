@@ -7,6 +7,8 @@ import { Message } from '@/types/chat';
 // Helper function to fetch projects from Supabase
 export const fetchProjects = async (projectIds?: string[]): Promise<Project[]> => {
   try {
+    console.log('Fetching projects', projectIds ? `with IDs: ${projectIds.join(', ')}` : 'all projects');
+    
     let query = supabase
       .from('projects')
       .select(`
@@ -34,6 +36,8 @@ export const fetchProjects = async (projectIds?: string[]): Promise<Project[]> =
       return [];
     }
     
+    console.log(`Found ${data.length} projects`, data);
+    
     // Transform data to match Project type
     return data.map(item => ({
       id: item.id,
@@ -57,53 +61,74 @@ export const processUserMessage = async (
   projects?: Project[];
   showProjects?: boolean;
 }> => {
-  // Check for the "show me recent work" command
+  console.log('Processing user message:', userMessage);
+  
+  // Check for the "show me recent work" or similar commands
   if (
-    userMessage.toLowerCase().includes('show me recent work') ||
-    userMessage.toLowerCase().includes('show projects') ||
+    userMessage.toLowerCase().includes('recent work') ||
+    userMessage.toLowerCase().includes('show project') ||
     userMessage.toLowerCase().includes('portfolio') ||
-    userMessage.toLowerCase().includes('work examples')
+    userMessage.toLowerCase().includes('work example') ||
+    userMessage.toLowerCase().includes('recent project') ||
+    userMessage.toLowerCase().includes('show me project')
   ) {
+    console.log('User is asking to see projects, fetching all projects');
     const projects = await fetchProjects();
+    console.log(`Fetched ${projects.length} projects for display`);
+    
+    if (projects.length === 0) {
+      return {
+        content: "I don't have any projects to show right now. Please check back later.",
+        showProjects: false
+      };
+    }
+    
     return {
       content: "Here are some of my recent projects. Click on any of them to learn more:",
       showProjects: true,
       projects
     };
-  } else {
-    // Try to use RAG to find relevant projects
-    const similarProjects = await searchSimilarProjects(userMessage);
-    
-    if (similarProjects && similarProjects.length > 0) {
-      // Get project IDs to fetch full project data
-      const projectIds = similarProjects.map(p => p.project_id);
-      const projects = await fetchProjects(projectIds);
-      
-      // Use OpenAI to generate a response based on the relevant projects
-      const context = similarProjects.map(p => p.content).join('\n');
-      const aiResponse = await getChatCompletion({
-        messages: [
-          {
-            role: 'system',
-            content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question: ${context}`
-          },
-          {
-            role: 'user',
-            content: userMessage
-          }
-        ],
-        model: 'gpt-4o-mini'
-      });
-      
-      return {
-        content: aiResponse,
-        projects: projects.length > 0 ? projects : undefined,
-        showProjects: projects.length > 0
-      };
-    } else {
-      return {
-        content: "I don't have specific information about that in my projects. Would you like to see my recent work instead?",
-      };
-    }
   }
+  
+  // Try to use RAG to find relevant projects
+  console.log('Attempting to find relevant projects using RAG');
+  const similarProjects = await searchSimilarProjects(userMessage);
+  
+  if (similarProjects && similarProjects.length > 0) {
+    console.log(`Found ${similarProjects.length} similar projects via RAG`);
+    
+    // Get project IDs to fetch full project data
+    const projectIds = similarProjects.map(p => p.project_id);
+    const projects = await fetchProjects(projectIds);
+    
+    // Use OpenAI to generate a response based on the relevant projects
+    const context = similarProjects.map(p => p.content).join('\n\n');
+    console.log('Generating AI response with context from similar projects');
+    
+    const aiResponse = await getChatCompletion({
+      messages: [
+        {
+          role: 'system',
+          content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question: ${context}`
+        },
+        {
+          role: 'user',
+          content: userMessage
+        }
+      ],
+      model: 'gpt-4o-mini'
+    });
+    
+    return {
+      content: aiResponse,
+      projects: projects.length > 0 ? projects : undefined,
+      showProjects: projects.length > 0
+    };
+  }
+  
+  // If no similar projects found via RAG
+  console.log('No similar projects found via RAG');
+  return {
+    content: "I don't have specific information about that in my projects. Would you like to see my recent work instead?",
+  };
 };

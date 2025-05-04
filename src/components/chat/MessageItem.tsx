@@ -23,7 +23,7 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
           })}
         </div>
       
-        {message.showProjects && message.projects && (
+        {message.showProjects && message.projects && message.projects.length > 0 && (
           <div className="my-12">
             <ProjectThumbnails projects={message.projects} onSelect={onProjectSelect} />
           </div>

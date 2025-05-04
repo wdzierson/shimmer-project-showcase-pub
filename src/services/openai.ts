@@ -13,6 +13,8 @@ export interface ChatCompletionRequest {
 
 export async function getChatCompletion(request: ChatCompletionRequest): Promise<string> {
   try {
+    console.log('Getting chat completion with model:', request.model);
+    
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -33,7 +35,7 @@ export async function getChatCompletion(request: ChatCompletionRequest): Promise
   }
 }
 
-export async function createEmbeddings(text: string): Promise<string> {
+export async function generateEmbeddings(text: string): Promise<number[]> {
   try {
     console.log('Generating embeddings for text:', text.substring(0, 50) + '...');
     
@@ -54,23 +56,29 @@ export async function createEmbeddings(text: string): Promise<string> {
     const data = await response.json();
     console.log('Embeddings generated successfully');
     
-    // Convert the embedding array to a string format that can be stored in Supabase
-    return JSON.stringify(data.embedding);
+    return data.embedding;
   } catch (error) {
     console.error('Error creating embeddings:', error);
-    // Return a mock embedding for fallback (would be removed in production)
-    // Stringify the mock array so it matches the expected string type
-    return JSON.stringify(Array(1536).fill(0).map(() => Math.random() * 0.01));
+    throw error;
   }
 }
 
-export async function generateEmbeddings(text: string): Promise<string> {
-  return createEmbeddings(text);
+export async function createEmbeddings(text: string): Promise<string> {
+  try {
+    const embedding = await generateEmbeddings(text);
+    return JSON.stringify(embedding);
+  } catch (error) {
+    console.error('Error in createEmbeddings:', error);
+    throw error;
+  }
 }
 
 export async function searchSimilarProjects(query: string): Promise<any[]> {
   try {
-    const queryEmbedding = await createEmbeddings(query);
+    console.log('Searching for projects similar to:', query);
+    
+    // Generate embedding for the query
+    const embedding = await generateEmbeddings(query);
     
     const response = await fetch('/api/search-projects', {
       method: 'POST',
@@ -78,8 +86,8 @@ export async function searchSimilarProjects(query: string): Promise<any[]> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        embedding: queryEmbedding,
-        threshold: 0.7,
+        embedding, 
+        threshold: 0.6, // Lower threshold to get more results
         limit: 5 
       }),
     });
@@ -89,6 +97,7 @@ export async function searchSimilarProjects(query: string): Promise<any[]> {
     }
     
     const data = await response.json();
+    console.log(`Found ${data.projects?.length || 0} similar projects`);
     return data.projects || [];
   } catch (error) {
     console.error('Error searching projects:', error);

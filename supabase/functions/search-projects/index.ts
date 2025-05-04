@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { embedding, threshold = 0.7, limit = 5 } = await req.json();
+    const { embedding, threshold = 0.6, limit = 5 } = await req.json();
     console.log('Received request to search for similar projects');
 
     if (!embedding) {
@@ -41,9 +41,12 @@ serve(async (req) => {
 
     console.log('Executing similarity search with threshold:', threshold, 'and limit:', limit);
     
+    // Convert embedding to proper format if needed
+    const embeddingValue = Array.isArray(embedding) ? embedding : JSON.parse(embedding);
+    
     // Execute the similarity search using the database function
     const { data: similarProjects, error } = await supabase.rpc('match_projects_by_query', {
-      query_embedding: embedding,
+      query_embedding: embeddingValue,
       match_threshold: threshold,
       match_count: limit
     });
@@ -53,10 +56,10 @@ serve(async (req) => {
       throw new Error(`Database error: ${error.message}`);
     }
 
-    console.log('Found similar projects:', similarProjects.length);
+    console.log('Found similar projects:', similarProjects?.length || 0);
     
     return new Response(
-      JSON.stringify({ projects: similarProjects }),
+      JSON.stringify({ projects: similarProjects || [] }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
