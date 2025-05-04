@@ -46,7 +46,7 @@ export const saveProject = async ({
       year: new Date().getFullYear(),
       updated_at: new Date().toISOString(),
       ...(isNew && { created_at: new Date().toISOString() }),
-      ...(liveUrl && { liveUrl }),
+      ...(liveUrl && { liveurl: liveUrl }),
       ...(involvement && { involvement })
     };
     

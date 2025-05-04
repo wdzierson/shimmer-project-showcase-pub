@@ -115,6 +115,8 @@ export type Database = {
           created_at: string | null
           description: string
           id: string
+          involvement: string | null
+          liveurl: string | null
           title: string
           updated_at: string | null
           visible: boolean | null
@@ -125,6 +127,8 @@ export type Database = {
           created_at?: string | null
           description: string
           id?: string
+          involvement?: string | null
+          liveurl?: string | null
           title: string
           updated_at?: string | null
           visible?: boolean | null
@@ -135,6 +139,8 @@ export type Database = {
           created_at?: string | null
           description?: string
           id?: string
+          involvement?: string | null
+          liveurl?: string | null
           title?: string
           updated_at?: string | null
           visible?: boolean | null

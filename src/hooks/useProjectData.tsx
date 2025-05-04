@@ -92,8 +92,8 @@ export const useProjectData = () => {
         }
         
         // Set live URL if available
-        if (projectData.liveUrl) {
-          setLiveUrl(projectData.liveUrl);
+        if (projectData.liveurl) {
+          setLiveUrl(projectData.liveurl);
         }
         
         // Set involvement if available
