@@ -1,5 +1,5 @@
 
-// This will be implemented once Supabase is connected
+// This file contains services for interacting with OpenAI API
 
 interface OpenAIMessage {
   role: 'system' | 'user' | 'assistant';
@@ -35,6 +35,8 @@ export async function getChatCompletion(request: ChatCompletionRequest): Promise
 
 export async function createEmbeddings(text: string): Promise<string> {
   try {
+    console.log('Generating embeddings for text:', text.substring(0, 50) + '...');
+    
     const response = await fetch('/api/generate-embeddings', {
       method: 'POST',
       headers: {
@@ -44,10 +46,14 @@ export async function createEmbeddings(text: string): Promise<string> {
     });
     
     if (!response.ok) {
-      throw new Error(`Embeddings API returned status ${response.status}`);
+      const errorText = await response.text();
+      console.error('Error response from embeddings API:', errorText);
+      throw new Error(`Embeddings API returned status ${response.status}: ${errorText}`);
     }
     
     const data = await response.json();
+    console.log('Embeddings generated successfully');
+    
     // Convert the embedding array to a string format that can be stored in Supabase
     return JSON.stringify(data.embedding);
   } catch (error) {

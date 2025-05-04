@@ -16,6 +16,7 @@ serve(async (req) => {
 
   try {
     const { embedding, threshold = 0.7, limit = 5 } = await req.json();
+    console.log('Received request to search for similar projects');
 
     if (!embedding) {
       return new Response(
@@ -25,11 +26,21 @@ serve(async (req) => {
     }
 
     // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://uilvozcryifnpldfpwiz.supabase.co';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase credentials');
+      return new Response(
+        JSON.stringify({ error: 'Supabase credentials are not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log('Executing similarity search with threshold:', threshold, 'and limit:', limit);
+    
     // Execute the similarity search using the database function
     const { data: similarProjects, error } = await supabase.rpc('match_projects_by_query', {
       query_embedding: embedding,
@@ -42,8 +53,7 @@ serve(async (req) => {
       throw new Error(`Database error: ${error.message}`);
     }
 
-    // Fetch the full project data for the matching projects
-    const projectIds = similarProjects.map((p: any) => p.project_id);
+    console.log('Found similar projects:', similarProjects.length);
     
     return new Response(
       JSON.stringify({ projects: similarProjects }),

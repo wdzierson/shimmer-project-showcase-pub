@@ -50,12 +50,17 @@ export const saveProject = async ({
       ...(involvement && { involvement })
     };
     
+    console.log('Saving project data:', projectData);
+    
     // Insert or update project
     let { error } = isNew 
       ? await supabase.from('projects').insert(projectData)
       : await supabase.from('projects').update(projectData).eq('id', projectId);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error saving project:', error);
+      throw error;
+    }
     
     // Save tags
     // First, get tag IDs or insert new ones
@@ -77,7 +82,10 @@ export const saveProject = async ({
           .from('tags')
           .insert({ id: newTagId, name: tagName });
           
-        if (tagError) throw tagError;
+        if (tagError) {
+          console.error('Error creating tag:', tagError);
+          throw tagError;
+        }
         tagIds.push(newTagId);
       }
     }
@@ -89,7 +97,10 @@ export const saveProject = async ({
         .delete()
         .eq('project_id', projectId);
         
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error('Error deleting existing tags:', deleteError);
+        throw deleteError;
+      }
     }
     
     // Save tag associations
@@ -103,7 +114,10 @@ export const saveProject = async ({
         .from('project_tags')
         .insert(projectTags);
         
-      if (projectTagsError) throw projectTagsError;
+      if (projectTagsError) {
+        console.error('Error saving project tags:', projectTagsError);
+        throw projectTagsError;
+      }
     }
     
     // Save primary image
@@ -123,7 +137,10 @@ export const saveProject = async ({
           .update({ image_url: imageUrl })
           .eq('id', existingImages[0].id);
           
-        if (imageError) throw imageError;
+        if (imageError) {
+          console.error('Error updating image:', imageError);
+          throw imageError;
+        }
       } else {
         // Insert new image
         const { error: imageError } = await supabase
@@ -135,33 +152,66 @@ export const saveProject = async ({
             display_order: 0
           });
           
-        if (imageError) throw imageError;
+        if (imageError) {
+          console.error('Error saving image:', imageError);
+          throw imageError;
+        }
       }
     }
     
+    // Generate content for embeddings
     try {
-      // Generate content for embeddings - wrap in try/catch so it doesn't block project saving if it fails
-      const { data: contentData } = await supabase.rpc('generate_project_content_for_embeddings', {
-        project_id: projectId
-      });
+      console.log('Generating content for embeddings...');
+      
+      // Generate content by directly concatenating project data with tags
+      // This ensures we always have content without relying on DB function
+      const contentData = `${title} ${client} ${description} ${tags.join(' ')}`;
       
       if (contentData) {
+        console.log('Content generated:', contentData);
+        
         // Generate embeddings using OpenAI
         const embeddings = await createEmbeddings(contentData);
         
         if (embeddings) {
-          // Store embeddings - the embedding is now a JSON string as expected by the database
-          const { error: embeddingError } = await supabase
+          console.log('Embeddings generated successfully');
+          
+          // First check if there's an existing embedding
+          const { data: existingEmbedding } = await supabase
             .from('project_embeddings')
-            .upsert({
-              project_id: projectId,
-              content: contentData,
-              embedding: embeddings
-            });
+            .select('id')
+            .eq('project_id', projectId)
+            .limit(1);
             
-          if (embeddingError) {
-            console.error('Error saving embeddings:', embeddingError);
-            // Continue even if embeddings fail - don't block the user
+          // Store embeddings - the embedding is now a JSON string as expected by the database
+          if (existingEmbedding && existingEmbedding.length > 0) {
+            // Update existing embedding
+            const { error: embeddingError } = await supabase
+              .from('project_embeddings')
+              .update({
+                content: contentData,
+                embedding: embeddings
+              })
+              .eq('id', existingEmbedding[0].id);
+              
+            if (embeddingError) {
+              console.error('Error updating embeddings:', embeddingError);
+              // Continue even if embeddings fail - don't block the user
+            }
+          } else {
+            // Insert new embedding
+            const { error: embeddingError } = await supabase
+              .from('project_embeddings')
+              .insert({
+                project_id: projectId,
+                content: contentData,
+                embedding: embeddings
+              });
+              
+            if (embeddingError) {
+              console.error('Error saving embeddings:', embeddingError);
+              // Continue even if embeddings fail - don't block the user
+            }
           }
         }
       }

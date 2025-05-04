@@ -44,10 +44,13 @@ export const useProjectData = () => {
       try {
         // Validate that the ID is in UUID format
         if (!isValidUUID(id)) {
+          console.error('Invalid project ID format:', id);
           toast.error('Invalid project ID format');
           navigate('/admin/projects');
           return;
         }
+        
+        console.log('Fetching project data for ID:', id);
         
         // Fetch project data
         const { data: projectData, error: projectError } = await supabase
@@ -56,12 +59,18 @@ export const useProjectData = () => {
           .eq('id', id)
           .single();
         
-        if (projectError) throw projectError;
+        if (projectError) {
+          console.error('Error fetching project:', projectError);
+          throw projectError;
+        }
+        
         if (!projectData) {
           toast.error('Project not found');
           navigate('/admin/projects');
           return;
         }
+        
+        console.log('Project data loaded:', projectData);
         
         // Set project basic data
         setTitle(projectData.title);

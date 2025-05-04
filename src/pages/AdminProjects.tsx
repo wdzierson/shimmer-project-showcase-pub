@@ -1,42 +1,117 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { Project } from '@/components/project/ProjectCard';
-
-// Mock data for projects (will be replaced with Supabase data)
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    title: 'Expert Physician Portal',
-    client: 'Included Health',
-    description: 'Physicians needed to evaluate patient conditions and make recommendations across a telehealth platform.',
-    imageUrl: '/lovable-uploads/e818c6cd-0b7f-4e5a-a8b8-5a83f891d04c.png',
-    tags: ['UX Research', 'UI Design', 'Healthcare'],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '2',
-    title: 'Health Bridge Platform',
-    client: 'HealthBridge',
-    description: 'A platform connecting patients with healthcare providers for seamless virtual care experiences.',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3',
-    tags: ['UI Design', 'Frontend Development', 'Telehealth'],
-    createdAt: '2023-03-22',
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const AdminProjects = () => {
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
   
+  // Fetch real data from Supabase
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from('projects')
+          .select(`
+            id,
+            title,
+            client,
+            description,
+            created_at,
+            project_images (image_url, is_primary),
+            project_tags (
+              tags (name)
+            )
+          `)
+          .order('updated_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          const formattedProjects: Project[] = data.map(item => ({
+            id: item.id,
+            title: item.title,
+            client: item.client,
+            description: item.description,
+            imageUrl: item.project_images.find((img: any) => img.is_primary)?.image_url || '/placeholder.svg',
+            tags: item.project_tags.map((tag: any) => tag.tags.name),
+            createdAt: item.created_at
+          }));
+          
+          setProjects(formattedProjects);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        toast.error('Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProjects();
+  }, []);
+
   const filteredProjects = projects.filter(project => 
     project.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     project.client.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDeleteProject = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this project?')) return;
+    
+    try {
+      // Delete project embeddings
+      const { error: embeddingsError } = await supabase
+        .from('project_embeddings')
+        .delete()
+        .eq('project_id', id);
+        
+      if (embeddingsError) throw embeddingsError;
+      
+      // Delete project images
+      const { error: imagesError } = await supabase
+        .from('project_images')
+        .delete()
+        .eq('project_id', id);
+        
+      if (imagesError) throw imagesError;
+      
+      // Delete project tags
+      const { error: tagsError } = await supabase
+        .from('project_tags')
+        .delete()
+        .eq('project_id', id);
+        
+      if (tagsError) throw tagsError;
+      
+      // Delete project itself
+      const { error: projectError } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+        
+      if (projectError) throw projectError;
+      
+      // Update local state
+      setProjects(projects.filter(project => project.id !== id));
+      toast.success('Project deleted successfully');
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Failed to delete project');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-muted/20">
@@ -76,7 +151,12 @@ const AdminProjects = () => {
           </div>
           
           <div className="divide-y">
-            {filteredProjects.length > 0 ? (
+            {loading ? (
+              <div className="p-8 text-center">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                <p className="text-muted-foreground">Loading projects...</p>
+              </div>
+            ) : filteredProjects.length > 0 ? (
               filteredProjects.map(project => (
                 <div key={project.id} className="grid grid-cols-12 gap-4 p-4 items-center">
                   <div className="col-span-5 flex items-center gap-4">
@@ -85,6 +165,10 @@ const AdminProjects = () => {
                         src={project.imageUrl} 
                         alt={project.title} 
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder.svg';
+                        }}
                       />
                     </div>
                     <div>
@@ -117,7 +201,12 @@ const AdminProjects = () => {
                         <Edit className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-destructive" 
+                      onClick={() => handleDeleteProject(project.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
