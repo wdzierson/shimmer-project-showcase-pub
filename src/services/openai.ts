@@ -33,7 +33,7 @@ export async function getChatCompletion(request: ChatCompletionRequest): Promise
   }
 }
 
-export async function createEmbeddings(text: string): Promise<number[]> {
+export async function createEmbeddings(text: string): Promise<string> {
   try {
     const response = await fetch('/api/generate-embeddings', {
       method: 'POST',
@@ -48,15 +48,17 @@ export async function createEmbeddings(text: string): Promise<number[]> {
     }
     
     const data = await response.json();
-    return data.embedding;
+    // Convert the embedding array to a string format that can be stored in Supabase
+    return JSON.stringify(data.embedding);
   } catch (error) {
     console.error('Error creating embeddings:', error);
     // Return a mock embedding for fallback (would be removed in production)
-    return Array(1536).fill(0).map(() => Math.random() * 0.01);
+    // Stringify the mock array so it matches the expected string type
+    return JSON.stringify(Array(1536).fill(0).map(() => Math.random() * 0.01));
   }
 }
 
-export async function generateEmbeddings(text: string): Promise<number[]> {
+export async function generateEmbeddings(text: string): Promise<string> {
   return createEmbeddings(text);
 }
 

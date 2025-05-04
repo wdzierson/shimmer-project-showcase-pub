@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -181,7 +180,7 @@ const ProjectEditor = () => {
         const embeddings = await createEmbeddings(contentData);
         
         if (embeddings) {
-          // Store embeddings - specify the correct type for the embedding field
+          // Store embeddings - the embedding is now a JSON string as expected by the database
           const { error: embeddingError } = await supabase
             .from('project_embeddings')
             .upsert({
