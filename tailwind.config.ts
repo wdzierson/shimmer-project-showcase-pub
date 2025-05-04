@@ -21,6 +21,7 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
+				mono: ['IBM Plex Mono', 'monospace'],
 				serif: ['Georgia', 'serif'],
 			},
 			colors: {

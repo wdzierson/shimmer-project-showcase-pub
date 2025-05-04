@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 14% 96%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -94,14 +94,15 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
   
   .portfolio-heading {
-    @apply text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight;
+    @apply text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight;
   }
   
   .portfolio-subheading {
-    @apply text-xl md:text-2xl font-medium text-muted-foreground;
+    @apply text-2xl md:text-3xl font-medium text-muted-foreground;
   }
   
   .case-study-title {
@@ -111,4 +112,21 @@
   .case-study-section {
     @apply text-lg uppercase font-medium text-muted-foreground tracking-widest;
   }
+  
+  .chat-message {
+    @apply text-2xl md:text-3xl lg:text-4xl leading-relaxed;
+  }
+  
+  .chat-message-user {
+    @apply text-xl md:text-2xl lg:text-3xl font-medium;
+  }
+  
+  .chat-input {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  
+  .mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
 }
+

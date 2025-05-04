@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Image } from 'lucide-react';
+import { Send } from 'lucide-react';
 import ProjectThumbnails from '@/components/project/ProjectThumbnails';
 import ProjectDetail from '@/components/project/ProjectDetail';
 import { Project } from '@/components/project/ProjectCard';
@@ -14,7 +14,7 @@ const mockProjects: Project[] = [
     title: 'Expert Physician Portal',
     client: 'Included Health',
     description: 'Physicians needed to evaluate patient conditions and make recommendations across a telehealth platform.',
-    imageUrl: '/lovable-uploads/e818c6cd-0b7f-4e5a-a8b8-5a83f891d04c.png',
+    imageUrl: '/lovable-uploads/85dd7d76-7e5f-4f35-a79f-ab99dd1c1202.png',
     tags: ['UX Research', 'UI Design', 'Healthcare'],
     createdAt: '2023-01-15',
   },
@@ -49,11 +49,19 @@ const ChatInterface = () => {
   ]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Focus input field when the component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,46 +118,43 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-[600px] bg-card border rounded-lg shadow-lg">
+    <div className="w-full h-full flex flex-col">
       {selectedProject ? (
         <ProjectDetail project={selectedProject} onClose={handleCloseProjectDetail} />
       ) : (
         <>
-          <div className="flex-grow overflow-y-auto p-4 space-y-4">
+          <div className="flex-grow overflow-y-auto p-6 md:p-12 lg:p-16 space-y-20">
             {messages.map((msg) => (
-              <div key={msg.id} className="flex flex-col">
-                <div
-                  className={`max-w-[80%] ${
-                    msg.sender === 'user'
-                      ? 'ml-auto bg-primary text-primary-foreground rounded-tl-lg rounded-bl-lg rounded-tr-lg'
-                      : 'bg-muted rounded-tr-lg rounded-br-lg rounded-tl-lg'
-                  } p-3 rounded-md shadow-sm`}
-                >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                  <span className="text-xs opacity-70 mt-1 block">
+              <div key={msg.id} className="w-full">
+                <div className={`max-w-4xl ${msg.sender === 'user' ? 'ml-auto' : 'mr-auto'}`}>
+                  <p className={`${msg.sender === 'user' ? 'chat-message-user text-right' : 'chat-message'}`}>
+                    {msg.content}
+                  </p>
+                  <div className={`text-sm opacity-50 mt-2 mono ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
                     {msg.timestamp.toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
-                  </span>
-                </div>
-                
-                {msg.showProjects && (
-                  <div className="my-4">
-                    <ProjectThumbnails projects={mockProjects} onSelect={handleProjectSelect} />
                   </div>
-                )}
+                
+                  {msg.showProjects && (
+                    <div className="my-12">
+                      <ProjectThumbnails projects={mockProjects} onSelect={handleProjectSelect} />
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
             <div ref={messagesEndRef} />
           </div>
           
-          <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2">
+          <form onSubmit={handleSubmit} className="p-6 md:p-8 border-t border-border/30 flex gap-4 bg-background/80 backdrop-blur-sm">
             <Textarea
+              ref={inputRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask me about my work or type 'show me recent work'..."
-              className="resize-none min-h-[60px]"
+              className="resize-none min-h-[60px] text-lg chat-input bg-transparent border-none focus-visible:ring-0 p-0 shadow-none"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -157,8 +162,8 @@ const ChatInterface = () => {
                 }
               }}
             />
-            <Button type="submit" size="icon" className="h-auto">
-              <Send size={20} />
+            <Button type="submit" size="icon" className="h-auto bg-transparent hover:bg-transparent text-foreground">
+              <Send size={24} />
             </Button>
           </form>
         </>
