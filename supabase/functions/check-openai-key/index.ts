@@ -29,10 +29,36 @@ serve(async (req) => {
       );
     }
     
+    // Validate the API key by making a test request to OpenAI
+    const response = await fetch('https://api.openai.com/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API key validation error:', errorData);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid OpenAI API key',
+          status: 'invalid',
+          details: errorData.error
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ 
-        message: 'OpenAI API key is configured',
-        status: 'configured'
+        message: 'OpenAI API key is configured and valid',
+        status: 'valid'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -41,7 +67,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error checking OpenAI key:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        status: 'error' 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
