@@ -98,7 +98,7 @@ const ChatInterface = () => {
         </div>
       </div>
       
-      {/* Full-screen project detail dialog */}
+      {/* Full-screen project detail dialog - updated for 40% transparent header */}
       <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
         <DialogContent className="max-w-full w-full h-[90vh] p-0 rounded-lg">
           {selectedProject && (

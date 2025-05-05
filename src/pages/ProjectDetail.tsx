@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -127,8 +126,8 @@ const ProjectDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Custom header that doesn't show the portfolio title */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
+      {/* Custom header with 40% transparency */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
           <div className="text-2xl font-medium tracking-tight">
             {project.title}

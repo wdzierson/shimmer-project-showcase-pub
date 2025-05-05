@@ -21,8 +21,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose }) => {
   
   return (
     <div className="h-full flex flex-col overflow-y-auto bg-[#f9f9f7]">
-      {/* Header with just the X to close */}
-      <div className="sticky top-0 z-10 py-4 px-6 flex justify-end bg-[#f9f9f7]/80 backdrop-blur-sm">
+      {/* Header with just the X to close - 40% transparent */}
+      <div className="sticky top-0 z-10 py-4 px-6 flex justify-end bg-[#f9f9f7]/60 backdrop-blur-sm">
         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-gray-200/60">
           <X size={20} />
         </Button>
