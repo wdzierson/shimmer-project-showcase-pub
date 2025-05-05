@@ -11,6 +11,9 @@ export interface ChatCompletionRequest {
   model: string;
 }
 
+// Supabase anon key for edge function calls
+const supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbHZvemNyeWlmbnBsZGZwd2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzOTYxMzAsImV4cCI6MjA2MTk3MjEzMH0.7W6t2His-58Hm25fKpaMVkIZ94p4QL39fbg352l-t1Q';
+
 export async function getChatCompletion(request: ChatCompletionRequest): Promise<string> {
   try {
     console.log('Getting chat completion with model:', request.model);
@@ -107,9 +110,6 @@ export async function getStreamingChatCompletion(
   }
 }
 
-// Supabase anon key for edge function calls
-const supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbHZvemNyeWlmbnBsZGZwd2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzOTYxMzAsImV4cCI6MjA2MTk3MjEzMH0.7W6t2His-58Hm25fKpaMVkIZ94p4QL39fbg352l-t1Q';
-
 export async function generateEmbeddings(text: string): Promise<number[]> {
   try {
     console.log('Generating embeddings for text:', text.substring(0, 50) + '...');
@@ -185,6 +185,3 @@ export async function searchSimilarProjects(query: string): Promise<any[]> {
     return [];
   }
 }
-
-// Supabase anon key for edge function calls
-const supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbHZvemNyeWlmbnBsZGZwd2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzOTYxMzAsImV4cCI6MjA2MTk3MjEzMH0.7W6t2His-58Hm25fKpaMVkIZ94p4QL39fbg352l-t1Q';
