@@ -62,13 +62,11 @@ export const processUserMessage = async (
   
   // If we got a meaningful result with either content or projects, return it
   if (semanticResults.content && semanticResults.content !== "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?") {
-    // Sort the projects if there are any
+    // Only show projects if there are actually relevant projects
     if (semanticResults.projects && semanticResults.projects.length > 0) {
       semanticResults.projects = sortProjectsByYear(semanticResults.projects);
-      // Make sure showProjects is true only when we actually have projects to show
       semanticResults.showProjects = true;
     } else {
-      // Explicitly set showProjects to false when no projects
       semanticResults.showProjects = false;
     }
     return semanticResults;
@@ -91,7 +89,7 @@ export const processUserMessage = async (
   }
   
   // If we reach here with no results yet, check if this is a general work-related query
-  // and return all projects as a fallback
+  // and return all projects as a fallback ONLY if it's work/project related
   if (isProjectOrWorkMention) {
     console.log('Work-related query detected, falling back to all projects');
     const allProjects = await fetchProjects();
@@ -106,9 +104,9 @@ export const processUserMessage = async (
     }
   }
   
-  // If no matching projects found, return a helpful message without projects
+  // For general questions that don't match any content or keywords, don't show projects
   return {
-    content: "I don't currently have information that matches your specific question. Would you like to see my portfolio to browse all projects?",
+    content: "I don't have specific information about that. Is there something about my work or projects you'd like to know?",
     showProjects: false
   };
 };
