@@ -1,3 +1,4 @@
+
 // This file contains services for interacting with OpenAI API
 
 interface OpenAIMessage {
@@ -184,3 +185,6 @@ export async function searchSimilarProjects(query: string): Promise<any[]> {
     return [];
   }
 }
+
+// Supabase anon key for edge function calls
+const supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbHZvemNyeWlmbnBsZGZwd2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzOTYxMzAsImV4cCI6MjA2MTk3MjEzMH0.7W6t2His-58Hm25fKpaMVkIZ94p4QL39fbg352l-t1Q';

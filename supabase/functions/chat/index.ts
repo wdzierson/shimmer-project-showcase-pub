@@ -25,12 +25,8 @@ serve(async (req) => {
       );
     }
 
-    // Set up streaming response
-    const transformStream = new TransformStream();
-    const writer = transformStream.writable.getWriter();
-    
-    // Start the OpenAI API request
-    const fetchResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Make the OpenAI API request (non-streaming)
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -41,90 +37,24 @@ serve(async (req) => {
         messages,
         max_tokens: 800,
         temperature: 0.7,
-        stream: true, // Enable streaming
+        stream: false, // Disable streaming
       }),
     });
 
-    if (!fetchResponse.ok) {
-      const errorData = await fetchResponse.json();
+    if (!response.ok) {
+      const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${fetchResponse.status} ${fetchResponse.statusText}`);
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 
-    // Create and return a streaming response
-    const streamResponse = new Response(transformStream.readable, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
+    // Process the regular (non-streaming) response
+    const data = await response.json();
+    const generatedText = data.choices[0].message.content;
 
-    // Process the OpenAI stream in the background
-    (async () => {
-      const reader = fetchResponse.body?.getReader();
-      if (!reader) {
-        await writer.write(new TextEncoder().encode('event: error\ndata: No response body from OpenAI\n\n'));
-        await writer.close();
-        return;
-      }
-
-      const decoder = new TextDecoder();
-      let buffer = '';
-      
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          // Decode the chunk and add to buffer
-          buffer += decoder.decode(value, { stream: true });
-          
-          // Process complete lines in the buffer
-          let newlineIndex;
-          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-            const line = buffer.slice(0, newlineIndex);
-            buffer = buffer.slice(newlineIndex + 1);
-            
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              
-              // Signal completion
-              if (data === '[DONE]') {
-                await writer.write(new TextEncoder().encode('data: [DONE]\n\n'));
-                continue;
-              }
-              
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices[0]?.delta?.content || '';
-                
-                if (content) {
-                  // Format response as proper SSE with data: prefix
-                  await writer.write(
-                    new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`)
-                  );
-                }
-              } catch (error) {
-                console.error('Error parsing OpenAI stream:', error, line);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error processing OpenAI stream:', error);
-        await writer.write(
-          new TextEncoder().encode(`event: error\ndata: ${JSON.stringify({ error: error.message })}\n\n`)
-        );
-      } finally {
-        // Signal completion
-        await writer.write(new TextEncoder().encode('data: [DONE]\n\n'));
-        await writer.close();
-      }
-    })();
-    
-    return streamResponse;
+    return new Response(
+      JSON.stringify({ generatedText }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Error in chat function:', error);
     return new Response(

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Project } from '@/components/project/ProjectCard';
 import ProjectDetail from '@/components/project/ProjectDetail';
@@ -7,7 +8,6 @@ import { Message } from '@/types/chat';
 import { processUserMessage } from '@/services/chatService';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getStreamingChatCompletion } from '@/services/openai';
 import { useToast } from '@/hooks/use-toast';
 
 const ChatInterface = () => {
@@ -63,33 +63,20 @@ const ChatInterface = () => {
     setShowSuggestions(false); // Hide suggestions once user starts typing
     
     try {
-      // Create a placeholder bot message for streaming updates
-      const botResponseId = (Date.now() + 1).toString();
-      const placeholderBotResponse: Message = {
-        id: botResponseId,
-        content: "",
-        sender: 'bot',
-        timestamp: new Date(),
-        isStreaming: true,
-      };
-      
-      setMessages((prev) => [...prev, placeholderBotResponse]);
-      
       // Process the message to determine if we need to show projects
       const response = await processUserMessage(message);
       
-      // Update the bot message with the full content once available
-      setMessages((prev) => prev.map(msg => 
-        msg.id === botResponseId 
-          ? { 
-              ...msg, 
-              content: response.content,
-              projects: response.projects,
-              showProjects: response.showProjects,
-              isStreaming: false
-            }
-          : msg
-      ));
+      // Add bot response
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: response.content,
+        sender: 'bot',
+        timestamp: new Date(),
+        projects: response.projects,
+        showProjects: response.showProjects,
+      };
+      
+      setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
       console.error('Error processing message:', error);
       
@@ -124,31 +111,18 @@ const ChatInterface = () => {
     setShowSuggestions(false); // Hide suggestions once user starts interacting
     setIsLoading(true);
     
-    // Create a placeholder bot message for streaming updates
-    const botResponseId = (Date.now() + 1).toString();
-    const placeholderBotResponse: Message = {
-      id: botResponseId,
-      content: "",
-      sender: 'bot',
-      timestamp: new Date(),
-      isStreaming: true,
-    };
-    
-    setMessages((prev) => [...prev, placeholderBotResponse]);
-    
     processUserMessage(suggestionText)
       .then(response => {
-        setMessages((prev) => prev.map(msg => 
-          msg.id === botResponseId 
-            ? { 
-                ...msg, 
-                content: response.content,
-                projects: response.projects,
-                showProjects: response.showProjects,
-                isStreaming: false
-              }
-            : msg
-        ));
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          content: response.content,
+          sender: 'bot',
+          timestamp: new Date(),
+          projects: response.projects,
+          showProjects: response.showProjects,
+        };
+        
+        setMessages((prev) => [...prev, botResponse]);
       })
       .catch(error => {
         console.error('Error processing suggestion:', error);

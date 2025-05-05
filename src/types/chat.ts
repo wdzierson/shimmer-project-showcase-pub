@@ -9,5 +9,4 @@ export interface Message {
   showProjects?: boolean;
   projects?: Project[];
   suggestions?: { text: string; delay: number }[];
-  isStreaming?: boolean;
 }
