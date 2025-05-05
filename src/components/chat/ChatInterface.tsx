@@ -7,6 +7,7 @@ import MessageInput from './MessageInput';
 import { Message } from '@/types/chat';
 import { processUserMessage } from '@/services/chatService';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
@@ -141,18 +142,20 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-background">
+    <div className="w-full h-[calc(100vh-9rem)] flex flex-col overflow-hidden bg-background">
       <div className="flex flex-col h-full">
-        <div className="flex-grow overflow-hidden">
-          <MessageList 
-            messages={messages} 
-            isLoading={isLoading} 
-            onProjectSelect={handleProjectSelect}
-            suggestions={showSuggestions ? suggestions : []}
-            onSuggestionClick={handleSuggestionClick}
-          />
+        <div className="flex-grow overflow-hidden relative">
+          <ScrollArea className="h-full pr-4">
+            <MessageList 
+              messages={messages} 
+              isLoading={isLoading} 
+              onProjectSelect={handleProjectSelect}
+              suggestions={showSuggestions ? suggestions : []}
+              onSuggestionClick={handleSuggestionClick}
+            />
+          </ScrollArea>
         </div>
-        <div className="sticky bottom-0">
+        <div className="sticky bottom-0 mt-4">
           <MessageInput 
             message={message}
             setMessage={setMessage}
@@ -162,7 +165,7 @@ const ChatInterface = () => {
         </div>
       </div>
       
-      {/* Full-screen project detail dialog - updated for 40% transparent header */}
+      {/* Full-screen project detail dialog */}
       <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
         <DialogContent className="max-w-full w-full h-[90vh] p-0 rounded-lg">
           {selectedProject && (

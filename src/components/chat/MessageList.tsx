@@ -35,8 +35,8 @@ const MessageList = ({
   }, [messages, suggestions]);
 
   return (
-    <div className="h-full overflow-y-auto px-4">
-      <div className="flex flex-col space-y-6 py-6">
+    <div className="py-6">
+      <div className="flex flex-col space-y-6">
         {messages.map((message) => (
           <MessageItem
             key={message.id}
