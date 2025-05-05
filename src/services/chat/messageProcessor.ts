@@ -46,6 +46,45 @@ export const processUserMessage = async (
     userMessage.toLowerCase().includes('work with') ||
     userMessage.toLowerCase().includes('work in');
   
+  // Check specifically for AI-related queries that should show projects
+  const isAIExperienceQuery = 
+    (isInquiryAboutExperience || isProjectOrWorkMention) &&
+    (userMessage.toLowerCase().includes('ai') || 
+     userMessage.toLowerCase().includes('artificial intelligence'));
+  
+  // If this is a direct query about AI experience, we should directly show AI projects
+  if (isAIExperienceQuery) {
+    console.log('AI experience query detected, fetching AI projects directly');
+    const allProjects = await fetchProjects();
+    
+    // Filter for AI projects
+    const aiProjects = allProjects.filter(project => 
+      project.title.toLowerCase().includes('ai') || 
+      project.description.toLowerCase().includes('ai') ||
+      project.description.toLowerCase().includes('artificial intelligence') ||
+      project.tags.some(tag => tag.toLowerCase().includes('ai')));
+    
+    if (aiProjects.length > 0) {
+      const sortedProjects = sortProjectsByYear(aiProjects);
+      
+      // If the query is "have you done" or similar, provide a detailed response and suggestion
+      if (userMessage.toLowerCase().includes('have you') || userMessage.toLowerCase().includes('do you have')) {
+        return {
+          content: "Yes, I have experience with AI! Here are some of my AI-related projects:",
+          projects: sortedProjects,
+          showProjects: true
+        };
+      } else if (showProjectsRegex.test(userMessage.toLowerCase())) {
+        // If it's a direct "show me" query, focus on presenting the projects
+        return {
+          content: "Here are my AI-related projects. Click on any of them to learn more:",
+          projects: sortedProjects,
+          showProjects: true
+        };
+      }
+    }
+  }
+  
   // Process the query as an explicit request to see projects
   if (
     showProjectsRegex.test(userMessage.toLowerCase()) ||
@@ -120,7 +159,13 @@ export const processUserMessage = async (
     // This is especially useful for questions about experience in certain areas
     let suggestions = [];
     
-    if (isInquiryAboutExperience && isProjectOrWorkMention) {
+    if ((isInquiryAboutExperience || isProjectOrWorkMention) && 
+        (userMessage.toLowerCase().includes('ai') || userMessage.toLowerCase().includes('artificial intelligence'))) {
+      suggestions.push({ 
+        text: "Show me AI-related projects", 
+        delay: 500 
+      });
+    } else if (isInquiryAboutExperience && isProjectOrWorkMention) {
       suggestions.push({ 
         text: "Show me related projects", 
         delay: 500 
