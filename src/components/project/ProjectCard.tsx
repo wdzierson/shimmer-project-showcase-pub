@@ -12,6 +12,8 @@ export interface Project {
   additionalImages?: string[];
   tags: string[];
   createdAt: string;
+  year?: number;
+  involvement?: string;
 }
 
 interface ProjectCardProps {

@@ -3,11 +3,15 @@ import React from 'react';
 import { Project } from '@/components/project/ProjectCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, X, ChevronRight } from 'lucide-react';
+import { ChevronLeft, X } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
+// Update the Project interface to include the new fields
 interface ProjectDetailProps {
-  project: Project;
+  project: Project & {
+    year?: number;
+    involvement?: string;
+  };
   onClose: () => void;
 }
 
