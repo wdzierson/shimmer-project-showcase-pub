@@ -8,4 +8,5 @@ export interface Message {
   timestamp: Date;
   showProjects?: boolean;
   projects?: Project[];
+  suggestions?: { text: string; delay: number }[];
 }

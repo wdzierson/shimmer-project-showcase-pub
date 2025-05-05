@@ -32,7 +32,7 @@ const MessageList = ({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, suggestions]);
 
   return (
     <div className="h-full overflow-y-auto px-4">

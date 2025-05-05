@@ -13,6 +13,7 @@ export const processUserMessage = async (
   content: string;
   projects?: Project[];
   showProjects?: boolean;
+  suggestions?: { text: string; delay: number }[];
 }> => {
   console.log('Processing user message:', userMessage);
   
@@ -34,7 +35,18 @@ export const processUserMessage = async (
     });
   };
   
-  // Handle direct requests for showing projects
+  // Check if the message is asking about experience or inquiring about topics
+  // that might warrant suggesting to show projects as a follow-up
+  const isInquiryAboutExperience = 
+    userMessage.toLowerCase().includes('experience') ||
+    userMessage.toLowerCase().includes('worked on') ||
+    userMessage.toLowerCase().includes('have any') ||
+    userMessage.toLowerCase().includes('do you have') ||
+    userMessage.toLowerCase().includes('have you done') ||
+    userMessage.toLowerCase().includes('work with') ||
+    userMessage.toLowerCase().includes('work in');
+  
+  // Process the query as an explicit request to see projects
   if (
     showProjectsRegex.test(userMessage.toLowerCase()) ||
     userMessage.toLowerCase().includes('portfolio') ||
@@ -50,6 +62,25 @@ export const processUserMessage = async (
         content: "I don't have any projects to show right now. Please check back later.",
         showProjects: false
       };
+    }
+    
+    // Check if the query is specifically about AI
+    if (userMessage.toLowerCase().includes('ai') || 
+        userMessage.toLowerCase().includes('artificial intelligence')) {
+      // Filter for AI-related projects
+      const aiProjects = sortedProjects.filter(project => 
+        project.title.toLowerCase().includes('ai') || 
+        project.description.toLowerCase().includes('ai') ||
+        project.description.toLowerCase().includes('artificial intelligence') ||
+        project.tags.some(tag => tag.toLowerCase().includes('ai')));
+      
+      if (aiProjects.length > 0) {
+        return {
+          content: "Here are my AI-related projects. Click on any of them to learn more:",
+          showProjects: true,
+          projects: aiProjects
+        };
+      }
     }
     
     return {
@@ -85,9 +116,21 @@ export const processUserMessage = async (
       model: 'gpt-4o-mini'
     });
     
+    // Determine if we should suggest showing projects as a follow-up
+    // This is especially useful for questions about experience in certain areas
+    let suggestions = [];
+    
+    if (isInquiryAboutExperience && isProjectOrWorkMention) {
+      suggestions.push({ 
+        text: "Show me related projects", 
+        delay: 500 
+      });
+    }
+    
     return {
       content: aiResponse,
-      showProjects: false // Don't show projects when we have content matches
+      showProjects: false,
+      suggestions: suggestions.length > 0 ? suggestions : undefined
     };
   }
   
@@ -101,7 +144,11 @@ export const processUserMessage = async (
       semanticResults.relevanceScore > 0.3) {
     console.log('Found relevant projects via semantic search with good relevance score');
     semanticResults.projects = sortProjectsByYear(semanticResults.projects);
-    return semanticResults;
+    return {
+      content: semanticResults.content,
+      projects: semanticResults.projects,
+      showProjects: true
+    };
   }
   
   // Extract potential keywords from the message for additional search
@@ -120,42 +167,60 @@ export const processUserMessage = async (
     }
   }
   
-  // If this is a work-related query and we've found no matches, show all projects as a fallback
-  if (isProjectOrWorkMention) {
-    console.log('Work-related query detected, fetching relevant projects');
+  // Special handling for AI-related queries that didn't match content
+  // but are clearly asking about AI experience
+  if (isInquiryAboutExperience && 
+     (userMessage.toLowerCase().includes('ai') || 
+      userMessage.toLowerCase().includes('artificial intelligence'))) {
+    
+    console.log('AI-related experience query detected, fetching AI projects');
     const allProjects = await fetchProjects();
     
-    if (allProjects.length > 0) {
-      // Filter for AI projects if the query contains AI keywords
-      const filteredProjects = userMessage.toLowerCase().includes('ai') || 
-                              userMessage.toLowerCase().includes('artificial intelligence') ?
-                              allProjects.filter(project => 
-                                project.title.toLowerCase().includes('ai') || 
-                                project.description.toLowerCase().includes('ai') ||
-                                project.description.toLowerCase().includes('artificial intelligence') ||
-                                project.tags.some(tag => tag.toLowerCase().includes('ai'))) :
-                              allProjects;
-                              
-      if (filteredProjects.length > 0) {
-        const sortedProjects = sortProjectsByYear(filteredProjects);
-        return {
-          content: "Here are some projects that might be relevant to your interest:",
-          projects: sortedProjects,
-          showProjects: true
-        };
-      }
+    // Filter for AI projects
+    const aiProjects = allProjects.filter(project => 
+      project.title.toLowerCase().includes('ai') || 
+      project.description.toLowerCase().includes('ai') ||
+      project.description.toLowerCase().includes('artificial intelligence') ||
+      project.tags.some(tag => tag.toLowerCase().includes('ai')));
+    
+    if (aiProjects.length > 0) {
+      const sortedProjects = sortProjectsByYear(aiProjects);
+      return {
+        content: "Yes, I have experience with AI! Here are some of my AI-related projects:",
+        projects: sortedProjects,
+        showProjects: true
+      };
     }
+    
+    // If no AI projects found but it was an AI query, suggest showing all projects
+    return {
+      content: "I have some experience with AI, though my portfolio might not show specific AI-focused projects at the moment.",
+      suggestions: [{ text: "Show me your portfolio anyway", delay: 500 }]
+    };
+  }
+  
+  // If this is a work-related query and we've found no matches, 
+  // provide a response with suggestion to show projects
+  if (isProjectOrWorkMention) {
+    console.log('Work-related query detected, but no specific matches found');
+    return {
+      content: "I'd be happy to tell you about my work. What specific aspects of my projects or areas of expertise are you interested in?",
+      showProjects: false,
+      suggestions: [{ text: "Show me your portfolio", delay: 500 }]
+    };
   }
   
   // For general questions that don't match any content or keywords,
-  // and aren't explicitly work-related, don't show projects
+  // and aren't explicitly work-related, don't show projects but offer a suggestion
   console.log('Query appears to be general knowledge, not showing projects');
   return {
     content: "I don't have specific information about that. Is there something about my work or projects you'd like to know?",
-    showProjects: false
+    showProjects: false,
+    suggestions: [{ text: "What kind of work do you do?", delay: 500 }]
   };
 };
 
 // Add the missing import for getChatCompletion
 import { getChatCompletion } from '@/services/openai';
 import { findRelevantContentEntries } from './semanticSearch';
+
