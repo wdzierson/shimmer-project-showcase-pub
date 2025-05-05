@@ -7,12 +7,8 @@ interface ProjectInfoSectionsProps {
 }
 
 const ProjectInfoSections: React.FC<ProjectInfoSectionsProps> = ({ year, createdAt }) => {
-  // Removed challenge, approach, impact sections as requested
-  return (
-    <div className="mb-16">
-      {/* Empty component per user request to remove this content */}
-    </div>
-  );
+  // Completely empty component as requested
+  return null;
 };
 
 export default ProjectInfoSections;

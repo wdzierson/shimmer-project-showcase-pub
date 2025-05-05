@@ -23,11 +23,13 @@ const HomeIntro = () => {
       </p>
       
       <div className="space-y-4">
-        <a href="https://github.com/willdzierson" 
-           className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-          <Github size={18} />
-          <span>View on GitHub</span>
-        </a>
+        <div>
+          <a href="https://github.com/willdzierson" 
+             className="flex items-center gap-2 text-foreground/80 hover:text-foreground">
+            <Github size={18} />
+            <span className="hover:underline">GitHub</span>
+          </a>
+        </div>
         
         <p className="text-foreground/80">
           Looking for <a 

@@ -10,7 +10,7 @@ const HomeHeader = () => {
           "font-serif text-lg tracking-wide text-foreground",
           "transition-all hover:opacity-70"
         )}>
-          WILL DZIERSON / DESIGN / TECHNOLOGY
+          WILL DZIERSON
         </h1>
       </div>
     </header>

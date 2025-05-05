@@ -47,13 +47,13 @@ const MessageList = ({
         
         {/* Suggestion buttons that fade in */}
         {suggestions.length > 0 && (
-          <div className="flex flex-col gap-3 mt-2">
+          <div className="flex flex-col items-start gap-3 mt-2">
             {suggestions.map((suggestion, index) => (
               <Button
                 key={index}
                 onClick={() => onSuggestionClick?.(suggestion.text)}
                 className={cn(
-                  "bg-zinc-800 text-white hover:bg-zinc-700 rounded-full transition-opacity duration-500 opacity-0",
+                  "bg-zinc-800 text-white hover:bg-zinc-700 rounded-full transition-opacity duration-500 opacity-0 w-auto",
                   "animate-fade-in"
                 )}
                 style={{ 

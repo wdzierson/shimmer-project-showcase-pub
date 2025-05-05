@@ -7,8 +7,6 @@ import MessageInput from './MessageInput';
 import { Message } from '@/types/chat';
 import { processUserMessage } from '@/services/chatService';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
@@ -33,12 +31,12 @@ const ChatInterface = () => {
   ];
 
   useEffect(() => {
-    // Show suggestion buttons after 3 seconds if no messages have been sent
+    // Show suggestion buttons after 5 seconds if no messages have been sent
     const timer = setTimeout(() => {
       if (messages.length === 1) {
         setShowSuggestions(true);
       }
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [messages]);
@@ -91,8 +89,45 @@ const ChatInterface = () => {
   };
 
   const handleSuggestionClick = (suggestionText: string) => {
-    setMessage(suggestionText);
-    handleSubmit(new Event('submit') as unknown as React.FormEvent);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: suggestionText,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+    
+    setMessages((prev) => [...prev, userMessage]);
+    setShowSuggestions(false); // Hide suggestions once user starts interacting
+    setIsLoading(true);
+    
+    processUserMessage(suggestionText)
+      .then(response => {
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          content: response.content,
+          sender: 'bot',
+          timestamp: new Date(),
+          projects: response.projects,
+          showProjects: response.showProjects,
+        };
+        
+        setMessages((prev) => [...prev, botResponse]);
+      })
+      .catch(error => {
+        console.error('Error processing suggestion:', error);
+        
+        const errorResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          content: "I'm sorry, I encountered an error processing your request. Please try again.",
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+        
+        setMessages((prev) => [...prev, errorResponse]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleProjectSelect = (project: Project) => {

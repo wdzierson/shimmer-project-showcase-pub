@@ -22,6 +22,16 @@ export const processUserMessage = async (
                               userMessage.toLowerCase().includes('work') ||
                               userMessage.toLowerCase().includes('portfolio');
   
+  // Function to sort projects by year in descending order
+  const sortProjectsByYear = (projects: Project[]): Project[] => {
+    return [...projects].sort((a, b) => {
+      // Sort by year if available, otherwise use creation date
+      const yearA = a.year || 0;
+      const yearB = b.year || 0;
+      return yearB - yearA; // Descending order (newest first)
+    });
+  };
+  
   // Handle direct requests for showing projects
   if (
     showProjectsRegex.test(userMessage.toLowerCase()) ||
@@ -30,9 +40,10 @@ export const processUserMessage = async (
   ) {
     console.log('User is asking to see projects, fetching all projects');
     const projects = await fetchProjects();
-    console.log(`Fetched ${projects.length} projects for display`);
+    const sortedProjects = sortProjectsByYear(projects);
+    console.log(`Fetched ${sortedProjects.length} projects for display`);
     
-    if (projects.length === 0) {
+    if (sortedProjects.length === 0) {
       return {
         content: "I don't have any projects to show right now. Please check back later.",
         showProjects: false
@@ -42,7 +53,7 @@ export const processUserMessage = async (
     return {
       content: "Here are some of my recent projects. Click on any of them to learn more:",
       showProjects: true,
-      projects
+      projects: sortedProjects
     };
   }
   
@@ -51,6 +62,10 @@ export const processUserMessage = async (
   
   // If we got a meaningful result with either content or projects, return it
   if (semanticResults.content && semanticResults.content !== "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?") {
+    // Sort the projects if there are any
+    if (semanticResults.projects && semanticResults.projects.length > 0) {
+      semanticResults.projects = sortProjectsByYear(semanticResults.projects);
+    }
     return semanticResults;
   }
   
@@ -61,9 +76,10 @@ export const processUserMessage = async (
     const keywordMatchedProjects = await searchProjectsByKeywords(potentialKeywords);
     if (keywordMatchedProjects.length > 0) {
       console.log(`Found ${keywordMatchedProjects.length} projects matching keywords`);
+      const sortedProjects = sortProjectsByYear(keywordMatchedProjects);
       return {
         content: `I found some projects related to "${potentialKeywords.join(', ')}" that might interest you:`,
-        projects: keywordMatchedProjects,
+        projects: sortedProjects,
         showProjects: true
       };
     }
@@ -76,9 +92,10 @@ export const processUserMessage = async (
     const allProjects = await fetchProjects();
     
     if (allProjects.length > 0) {
+      const sortedProjects = sortProjectsByYear(allProjects);
       return {
         content: "Here are some projects I've worked on that might be relevant:",
-        projects: allProjects,
+        projects: sortedProjects,
         showProjects: true
       };
     }
