@@ -19,7 +19,7 @@ const MessageList = ({ messages, isLoading, onProjectSelect }: MessageListProps)
   }, [messages]);
 
   return (
-    <div className="flex-grow overflow-y-auto p-6 md:p-12 lg:p-16 space-y-20">
+    <div className="flex-grow overflow-y-auto p-6 md:p-12 lg:p-16 space-y-6">
       {messages.map((msg) => (
         <MessageItem 
           key={msg.id} 
