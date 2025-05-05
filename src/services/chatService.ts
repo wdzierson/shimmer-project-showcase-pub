@@ -54,6 +54,30 @@ export const fetchProjects = async (projectIds?: string[]): Promise<Project[]> =
   }
 };
 
+// Helper function to search projects by keyword in title, client, description, and tags
+export const searchProjectsByKeywords = async (keywords: string[]): Promise<Project[]> => {
+  try {
+    console.log('Searching projects by keywords:', keywords);
+    if (!keywords || keywords.length === 0) return [];
+    
+    // Get all projects to search through
+    const allProjects = await fetchProjects();
+    if (!allProjects.length) return [];
+    
+    // Filter projects that match any of the keywords
+    return allProjects.filter(project => {
+      const projectContent = `${project.title} ${project.client} ${project.description} ${project.tags.join(' ')}`.toLowerCase();
+      
+      return keywords.some(keyword => 
+        projectContent.includes(keyword.toLowerCase())
+      );
+    });
+  } catch (error) {
+    console.error('Error searching projects by keywords:', error);
+    return [];
+  }
+};
+
 export const processUserMessage = async (
   userMessage: string
 ): Promise<{
@@ -88,7 +112,22 @@ export const processUserMessage = async (
     };
   }
   
-  // Try to use RAG to find relevant projects
+  // Extract potential keywords from the user message
+  const potentialKeywords = extractKeywords(userMessage);
+  if (potentialKeywords.length > 0) {
+    // Try direct keyword search first
+    const keywordMatchedProjects = await searchProjectsByKeywords(potentialKeywords);
+    if (keywordMatchedProjects.length > 0) {
+      console.log(`Found ${keywordMatchedProjects.length} projects matching keywords`);
+      return {
+        content: `I found some projects related to "${potentialKeywords.join(', ')}" that might interest you:`,
+        projects: keywordMatchedProjects,
+        showProjects: true
+      };
+    }
+  }
+  
+  // Try to use RAG to find relevant projects if no direct keyword matches
   console.log('Attempting to find relevant projects using RAG');
   try {
     const similarProjects = await searchSimilarProjects(userMessage);
@@ -130,21 +169,52 @@ export const processUserMessage = async (
     console.error('Error during RAG process:', error);
   }
   
-  // If no similar projects found via RAG or if an error occurred
-  console.log('No similar projects found via RAG or an error occurred, fetching all projects instead');
-  const allProjects = await fetchProjects();
-  
-  if (allProjects.length > 0) {
-    return {
-      content: "Here are some of my recent projects that might interest you:",
-      projects: allProjects,
-      showProjects: true
-    };
-  }
-  
-  // If no projects available at all
+  // If no matching projects found, return a helpful message without projects
   return {
-    content: "Would you like to see my recent work? Just ask to see my portfolio or any specific type of projects you're interested in.",
+    content: "I don't have specific projects matching your question. Could you try asking in a different way, or ask to see my portfolio to browse all projects?",
     showProjects: false
   };
 };
+
+// Helper function to extract potential keywords from user messages
+function extractKeywords(message: string): string[] {
+  const lowerMessage = message.toLowerCase();
+  
+  // Common keywords to look for in project contexts
+  const industryKeywords = [
+    'healthcare', 'finance', 'tech', 'education', 'retail', 'gaming', 
+    'social media', 'travel', 'food', 'sports', 'entertainment', 
+    'medical', 'banking', 'insurance', 'automotive', 'real estate',
+    'mobile', 'web', 'app', 'application', 'website', 'platform',
+    'e-commerce', 'marketing', 'analytics', 'design', 'development',
+    'frontend', 'backend', 'fullstack', 'ui', 'ux'
+  ];
+  
+  // Extract question focus
+  // For "Do you have X" or "Have you worked on X" type questions
+  let extractedKeywords: string[] = [];
+  
+  if (lowerMessage.includes('experience with') || 
+      lowerMessage.includes('worked on') || 
+      lowerMessage.includes('have any') ||
+      lowerMessage.includes('do you have')) {
+    
+    industryKeywords.forEach(keyword => {
+      if (lowerMessage.includes(keyword)) {
+        extractedKeywords.push(keyword);
+      }
+    });
+  }
+  
+  // Look for any keywords that might be in the message
+  if (extractedKeywords.length === 0) {
+    industryKeywords.forEach(keyword => {
+      if (lowerMessage.includes(keyword)) {
+        extractedKeywords.push(keyword);
+      }
+    });
+  }
+  
+  console.log('Extracted keywords from message:', extractedKeywords);
+  return extractedKeywords;
+}
