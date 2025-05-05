@@ -136,7 +136,7 @@ export const processUserMessage = async (
   
   if (allProjects.length > 0) {
     return {
-      content: "I don't have specific information about that in my projects, but here are some of my recent works that might interest you:",
+      content: "Here are some of my recent projects that might interest you:",
       projects: allProjects,
       showProjects: true
     };
@@ -144,7 +144,7 @@ export const processUserMessage = async (
   
   // If no projects available at all
   return {
-    content: "I don't have specific information about that in my projects. Would you like to see my recent work instead? Just type 'show me recent work'.",
+    content: "Would you like to see my recent work? Just ask to see my portfolio or any specific type of projects you're interested in.",
     showProjects: false
   };
 };

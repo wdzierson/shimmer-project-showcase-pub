@@ -16,7 +16,7 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
         <div className={`${
           message.sender === 'user' 
             ? 'text-right ml-auto' 
-            : 'bg-muted/30 p-4 rounded-lg text-left'
+            : 'text-left'
         }`}>
           <p className={`leading-relaxed ${
             message.sender === 'user' 
@@ -27,7 +27,7 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
           </p>
         </div>
         
-        <div className={`text-xs text-muted-foreground mt-1.5 font-mono ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+        <div className="text-xs text-muted-foreground mt-1.5 font-mono text-left">
           {message.timestamp.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
