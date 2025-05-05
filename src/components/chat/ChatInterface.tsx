@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Project } from '@/components/project/ProjectCard';
 import ProjectDetail from '@/components/project/ProjectDetail';
@@ -155,14 +154,12 @@ const ChatInterface = () => {
             />
           </ScrollArea>
         </div>
-        <div className="sticky bottom-0 mt-4">
-          <MessageInput 
-            message={message}
-            setMessage={setMessage}
-            handleSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
-        </div>
+        <MessageInput 
+          message={message}
+          setMessage={setMessage}
+          handleSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
       </div>
       
       {/* Full-screen project detail dialog */}
