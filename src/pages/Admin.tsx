@@ -56,7 +56,7 @@ const Admin = () => {
           <Card>
             <CardHeader>
               <CardTitle>Content</CardTitle>
-              <CardDescription>Manage chat responses and content</CardDescription>
+              <CardDescription>Manage personal info and chat content</CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">

@@ -9,6 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      content_embeddings: {
+        Row: {
+          content: string
+          content_id: string
+          created_at: string
+          embedding: string | null
+          id: string
+        }
+        Insert: {
+          content: string
+          content_id: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+        }
+        Update: {
+          content?: string
+          content_id?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_embeddings_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_entries: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          title: string
+          type: string
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+          type: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
       project_embeddings: {
         Row: {
           content: string
@@ -227,6 +289,19 @@ export type Database = {
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
+      }
+      match_content_by_query: {
+        Args: {
+          query_embedding: string
+          match_threshold?: number
+          match_count?: number
+        }
+        Returns: {
+          id: string
+          content_id: string
+          content: string
+          similarity: number
+        }[]
       }
       match_projects_by_query: {
         Args: {

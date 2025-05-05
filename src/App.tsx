@@ -8,7 +8,9 @@ import { useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import AdminProjects from "./pages/AdminProjects"; 
+import AdminContent from "./pages/AdminContent";
 import ProjectEditor from "./pages/ProjectEditor";
+import ContentEditor from "./pages/ContentEditor";
 import NotFound from "./pages/NotFound";
 import { supabase } from "./integrations/supabase/client";
 
@@ -63,6 +65,8 @@ const App = () => {
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/projects" element={<AdminProjects />} />
             <Route path="/admin/project/:id" element={<ProjectEditor />} />
+            <Route path="/admin/content" element={<AdminContent />} />
+            <Route path="/admin/content/:id" element={<ContentEditor />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -3,6 +3,7 @@ import { searchSimilarProjects } from '@/services/openai';
 import { getChatCompletion } from '@/services/openai';
 import { fetchProjects } from './projectFetcher';
 import { Project } from '@/components/project/ProjectCard';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Uses RAG (Retrieval-Augmented Generation) to find semantically relevant projects
@@ -71,10 +72,91 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
       }
     }
 
+    // No project results found, try content entries
+    const contentEntries = await findRelevantContentEntries(userMessage);
+    if (contentEntries && contentEntries.length > 0) {
+      // Use relevant content entries to generate a response
+      const context = contentEntries
+        .map(entry => `[${entry.type}] ${entry.title}: ${entry.content}`)
+        .join('\n\n');
+        
+      console.log('Generating AI response with context from content entries');
+      
+      const aiResponse = await getChatCompletion({
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful portfolio assistant. Use the following information to answer the user's question concisely: ${context}`
+          },
+          {
+            role: 'user',
+            content: userMessage
+          }
+        ],
+        model: 'gpt-4o-mini'
+      });
+      
+      return {
+        content: aiResponse,
+        showProjects: false
+      };
+    }
+
     // No results found
     return { content: "", showProjects: false };
   } catch (error) {
     console.error('Error during RAG process:', error);
     throw error;
+  }
+};
+
+/**
+ * Finds content entries that are semantically relevant to the user's message
+ */
+export const findRelevantContentEntries = async (userMessage: string) => {
+  try {
+    console.log('Searching for relevant content entries...');
+    
+    // Generate embedding for the query
+    const { data: embeddingData } = await supabase.functions.invoke('generate-embeddings', {
+      body: { text: userMessage }
+    });
+    
+    if (!embeddingData || !embeddingData.embedding) {
+      console.error('Failed to generate embedding for content search');
+      return [];
+    }
+    
+    // Use embedding to search for similar content
+    const { data: searchData } = await supabase.functions.invoke('search-content', {
+      body: { 
+        embedding: embeddingData.embedding, 
+        threshold: 0.3, 
+        limit: 5 
+      }
+    });
+    
+    if (!searchData || !searchData.entries) {
+      console.log('No relevant content entries found');
+      return [];
+    }
+    
+    console.log(`Found ${searchData.entries.length} relevant content entries`);
+    
+    // Fetch the complete content entries
+    const contentIds = searchData.entries.map((entry: any) => entry.content_id);
+    
+    if (contentIds.length === 0) return [];
+    
+    const { data: contentEntries } = await supabase
+      .from('content_entries')
+      .select('*')
+      .in('id', contentIds)
+      .eq('visible', true);
+      
+    return contentEntries || [];
+  } catch (error) {
+    console.error('Error searching for content entries:', error);
+    return [];
   }
 };
