@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { GitHub } from 'lucide-react';
+import { Github } from 'lucide-react';
 
 const HomeIntro = () => {
   return (
@@ -25,7 +25,7 @@ const HomeIntro = () => {
       <div className="space-y-4">
         <a href="https://github.com/willdzierson" 
            className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
-          <GitHub size={18} />
+          <Github size={18} />
           <span>View on GitHub</span>
         </a>
         
