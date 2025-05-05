@@ -12,7 +12,7 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '0',
-      content: "Hello! I'm your portfolio assistant. You can ask me about my work, experience, or type 'show me recent work' to see my projects.",
+      content: "Hi, I'm Will's portfolio assistant. Just ask to see recent work, work by industry, role, or whatever you'd like. You're also welcome to ask questions about my skills and interests.",
       sender: 'bot',
       timestamp: new Date(),
     }

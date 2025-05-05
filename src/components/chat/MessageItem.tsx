@@ -16,9 +16,13 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
         <div className={`p-4 rounded-lg ${
           message.sender === 'user' 
             ? 'bg-primary/10 text-right ml-auto' 
-            : 'bg-muted/50 text-left mr-auto'
+            : 'bg-muted/30 text-left mr-auto'
         }`}>
-          <p className="text-foreground leading-relaxed">
+          <p className={`leading-relaxed ${
+            message.sender === 'user' 
+              ? 'text-foreground font-medium text-lg' 
+              : 'text-foreground/90 text-xl font-light tracking-wide'
+          }`}>
             {message.content}
           </p>
         </div>
