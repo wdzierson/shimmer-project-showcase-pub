@@ -20,7 +20,9 @@ export const processUserMessage = async (
   const showProjectsRegex = /show\s+(?:me\s+)?(?:recent\s+)?(?:work|projects?|portfolio|all)/i;
   const isProjectOrWorkMention = userMessage.toLowerCase().includes('project') || 
                               userMessage.toLowerCase().includes('work') ||
-                              userMessage.toLowerCase().includes('portfolio');
+                              userMessage.toLowerCase().includes('portfolio') ||
+                              userMessage.toLowerCase().includes('ai') ||
+                              userMessage.toLowerCase().includes('artificial intelligence');
   
   // Function to sort projects by year in descending order
   const sortProjectsByYear = (projects: Project[]): Project[] => {
@@ -96,8 +98,8 @@ export const processUserMessage = async (
   // Check if the semantic search returned actual relevant projects (not fallback)
   if (semanticResults.projects && 
       semanticResults.projects.length > 0 && 
-      semanticResults.showProjects === true) {
-    console.log('Found relevant projects via semantic search');
+      semanticResults.relevanceScore > 0.3) {
+    console.log('Found relevant projects via semantic search with good relevance score');
     semanticResults.projects = sortProjectsByYear(semanticResults.projects);
     return semanticResults;
   }
@@ -120,16 +122,28 @@ export const processUserMessage = async (
   
   // If this is a work-related query and we've found no matches, show all projects as a fallback
   if (isProjectOrWorkMention) {
-    console.log('Work-related query detected, falling back to all projects');
+    console.log('Work-related query detected, fetching relevant projects');
     const allProjects = await fetchProjects();
     
     if (allProjects.length > 0) {
-      const sortedProjects = sortProjectsByYear(allProjects);
-      return {
-        content: "Here are some projects I've worked on that might be relevant:",
-        projects: sortedProjects,
-        showProjects: true
-      };
+      // Filter for AI projects if the query contains AI keywords
+      const filteredProjects = userMessage.toLowerCase().includes('ai') || 
+                              userMessage.toLowerCase().includes('artificial intelligence') ?
+                              allProjects.filter(project => 
+                                project.title.toLowerCase().includes('ai') || 
+                                project.description.toLowerCase().includes('ai') ||
+                                project.description.toLowerCase().includes('artificial intelligence') ||
+                                project.tags.some(tag => tag.toLowerCase().includes('ai'))) :
+                              allProjects;
+                              
+      if (filteredProjects.length > 0) {
+        const sortedProjects = sortProjectsByYear(filteredProjects);
+        return {
+          content: "Here are some projects that might be relevant to your interest:",
+          projects: sortedProjects,
+          showProjects: true
+        };
+      }
     }
   }
   

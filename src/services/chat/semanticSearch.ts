@@ -12,6 +12,7 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
   content: string;
   projects?: Project[];
   showProjects?: boolean;
+  relevanceScore: number;
 }> => {
   console.log('Attempting to find relevant projects using RAG');
   try {
@@ -25,12 +26,19 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
     // Process similar projects first to see if we have project matches
     let projectsToDisplay: Project[] = [];
     let hasRelevantProjects = false;
+    let relevanceScore = 0;
     
     if (similarProjects && similarProjects.length > 0) {
       console.log(`Found ${similarProjects.length} similar projects via RAG`);
       
       // Check if these are fallback results (similarity = 0)
       const isFallbackResults = similarProjects.every(p => p.similarity === 0);
+      
+      // Calculate average similarity score for the projects
+      if (!isFallbackResults) {
+        relevanceScore = similarProjects.reduce((acc, p) => acc + (p.similarity || 0), 0) / similarProjects.length;
+        console.log(`Average relevance score: ${relevanceScore}`);
+      }
       
       // Get project IDs to fetch full project data
       const projectIds = similarProjects.map(p => p.project_id);
@@ -73,14 +81,16 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
         return {
           content: aiResponse,
           projects: projectsToDisplay,
-          showProjects: true
+          showProjects: true,
+          relevanceScore
         };
       }
       
       // Otherwise just return the AI response
       return {
         content: aiResponse,
-        showProjects: false
+        showProjects: false,
+        relevanceScore
       };
     }
     
@@ -119,13 +129,15 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
         return {
           content: aiResponse,
           projects: projectsToDisplay,
-          showProjects: true
+          showProjects: true,
+          relevanceScore
         };
       } else {
         // For non-project queries, don't show fallback results
         return {
           content: "I don't have specific information about that. Is there something about my work or projects you'd like to know?",
-          showProjects: false 
+          showProjects: false,
+          relevanceScore
         };
       }
     }
@@ -133,7 +145,8 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
     // No results found
     return { 
       content: "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?", 
-      showProjects: false 
+      showProjects: false,
+      relevanceScore
     };
   } catch (error) {
     console.error('Error during RAG process:', error);
