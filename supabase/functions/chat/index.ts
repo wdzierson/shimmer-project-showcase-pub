@@ -25,8 +25,12 @@ serve(async (req) => {
       );
     }
 
-    // Call OpenAI API for chat completion
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Set up streaming response
+    const transformStream = new TransformStream();
+    const writer = transformStream.writable.getWriter();
+    
+    // Start the OpenAI API request
+    const fetchResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -37,22 +41,75 @@ serve(async (req) => {
         messages,
         max_tokens: 800,
         temperature: 0.7,
+        stream: true, // Enable streaming
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
+    if (!fetchResponse.ok) {
+      const errorData = await fetchResponse.json();
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      throw new Error(`OpenAI API error: ${fetchResponse.status} ${fetchResponse.statusText}`);
     }
 
-    const data = await response.json();
-    const generatedText = data.choices[0].message.content;
+    // Create and return a streaming response
+    const streamResponse = new Response(transformStream.readable, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
 
-    return new Response(
-      JSON.stringify({ generatedText }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Process the OpenAI stream in the background
+    (async () => {
+      const reader = fetchResponse.body?.getReader();
+      if (!reader) {
+        await writer.write(new TextEncoder().encode('event: error\ndata: No response body from OpenAI\n\n'));
+        await writer.close();
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices[0].delta.content;
+                if (content) {
+                  await writer.write(
+                    new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`)
+                  );
+                }
+              } catch (error) {
+                console.error('Error parsing OpenAI stream:', error, data);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error processing OpenAI stream:', error);
+      } finally {
+        await writer.write(new TextEncoder().encode('event: done\ndata: Stream finished\n\n'));
+        await writer.close();
+      }
+    })();
+    
+    return streamResponse;
   } catch (error) {
     console.error('Error in chat function:', error);
     return new Response(

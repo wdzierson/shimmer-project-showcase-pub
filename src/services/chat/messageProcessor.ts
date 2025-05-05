@@ -1,4 +1,3 @@
-
 import { Project } from '@/components/project/ProjectCard';
 import { extractKeywords } from './extractKeywords';
 import { searchProjectsByKeywords, fetchProjects } from './projectFetcher';
@@ -141,6 +140,7 @@ export const processUserMessage = async (
       .map(entry => `[${entry.type}] ${entry.title}: ${entry.content}`)
       .join('\n\n');
       
+    // Use gpt-4o-mini for better performance with content entries
     const aiResponse = await getChatCompletion({
       messages: [
         {
@@ -152,7 +152,7 @@ export const processUserMessage = async (
           content: userMessage
         }
       ],
-      model: 'gpt-4o-mini'
+      model: 'gpt-4o-mini' // Using the optimized model
     });
     
     // Determine if we should suggest showing projects as a follow-up
@@ -268,4 +268,3 @@ export const processUserMessage = async (
 // Add the missing import for getChatCompletion
 import { getChatCompletion } from '@/services/openai';
 import { findRelevantContentEntries } from './semanticSearch';
-

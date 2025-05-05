@@ -36,6 +36,72 @@ export async function getChatCompletion(request: ChatCompletionRequest): Promise
   }
 }
 
+// Function to handle streaming chat completions
+export async function getStreamingChatCompletion(
+  request: ChatCompletionRequest, 
+  onChunk: (chunk: string) => void,
+  onComplete: (fullText: string) => void
+): Promise<void> {
+  try {
+    console.log('Getting streaming chat completion with model:', request.model);
+    
+    const response = await fetch('https://uilvozcryifnpldfpwiz.supabase.co/functions/v1/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnon}`,
+      },
+      body: JSON.stringify(request),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`OpenAI API returned status ${response.status}`);
+    }
+    
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is null');
+    }
+    
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      const chunk = decoder.decode(value, { stream: true });
+      buffer += chunk;
+      
+      // Process event-stream format
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop() || '';
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.content) {
+              fullText += data.content;
+              onChunk(data.content);
+            }
+          } catch (error) {
+            console.error('Error parsing stream data:', error, line);
+          }
+        }
+      }
+    }
+    
+    onComplete(fullText);
+    return;
+  } catch (error) {
+    console.error('Error in streaming chat completion:', error);
+    onChunk("Sorry, I encountered an error while processing your request.");
+    onComplete("Sorry, I encountered an error while processing your request.");
+  }
+}
+
 // Supabase anon key for edge function calls
 const supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbHZvemNyeWlmbnBsZGZwd2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzOTYxMzAsImV4cCI6MjA2MTk3MjEzMH0.7W6t2His-58Hm25fKpaMVkIZ94p4QL39fbg352l-t1Q';
 
