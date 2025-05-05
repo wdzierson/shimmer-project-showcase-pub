@@ -78,15 +78,19 @@ serve(async (req) => {
           const { done, value } = await reader.read();
           if (done) break;
           
+          // Decode the chunk and add to buffer
           buffer += decoder.decode(value, { stream: true });
           
-          // Split by double newlines which separate SSE events
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          
-          for (const line of lines) {
+          // Process complete lines in the buffer
+          let newlineIndex;
+          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+            const line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+            
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
+              
+              // Signal completion
               if (data === '[DONE]') {
                 await writer.write(new TextEncoder().encode('data: [DONE]\n\n'));
                 continue;
@@ -95,7 +99,9 @@ serve(async (req) => {
               try {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices[0]?.delta?.content || '';
+                
                 if (content) {
+                  // Format response as proper SSE with data: prefix
                   await writer.write(
                     new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`)
                   );
@@ -112,6 +118,7 @@ serve(async (req) => {
           new TextEncoder().encode(`event: error\ndata: ${JSON.stringify({ error: error.message })}\n\n`)
         );
       } finally {
+        // Signal completion
         await writer.write(new TextEncoder().encode('data: [DONE]\n\n'));
         await writer.close();
       }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Project } from '@/components/project/ProjectCard';
 import ProjectDetail from '@/components/project/ProjectDetail';

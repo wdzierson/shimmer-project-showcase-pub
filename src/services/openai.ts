@@ -1,4 +1,3 @@
-
 // This file contains services for interacting with OpenAI API
 
 interface OpenAIMessage {
@@ -58,29 +57,28 @@ export async function getStreamingChatCompletion(
       throw new Error(`OpenAI API returned status ${response.status}`);
     }
     
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('Response body is null');
+    if (!response.body) {
+      throw new Error('Response body is not available');
     }
     
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '';
-    let buffer = '';
     
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       
+      // Process the received chunk
       const chunk = decoder.decode(value, { stream: true });
-      buffer += chunk;
+      console.log('Received chunk:', chunk);
       
-      // Process event-stream format
-      const lines = buffer.split('\n\n');
-      buffer = lines.pop() || '';
+      // Split by lines to process individual SSE messages
+      const lines = chunk.split('\n');
       
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const data = line.slice(6);
+          const data = line.substring(6).trim(); // Remove 'data: ' prefix
           
           if (data === '[DONE]') {
             console.log('Stream completed');
@@ -88,20 +86,19 @@ export async function getStreamingChatCompletion(
           }
           
           try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) {
-              fullText += parsed.content;
-              onChunk(parsed.content);
+            const parsedData = JSON.parse(data);
+            if (parsedData.content) {
+              fullText += parsedData.content;
+              onChunk(parsedData.content);
             }
           } catch (error) {
-            console.error('Error parsing stream data:', error, line);
+            console.error('Failed to parse JSON from data line:', error, data);
           }
         }
       }
     }
     
     onComplete(fullText);
-    return;
   } catch (error) {
     console.error('Error in streaming chat completion:', error);
     onChunk("Sorry, I encountered an error while processing your request.");
