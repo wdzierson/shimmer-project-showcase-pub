@@ -11,7 +11,7 @@ interface ProjectThumbnailsProps {
 
 const ProjectThumbnails: React.FC<ProjectThumbnailsProps> = ({ projects, onSelect }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {projects.map((project) => (
         <div 
           key={project.id}
@@ -21,7 +21,7 @@ const ProjectThumbnails: React.FC<ProjectThumbnailsProps> = ({ projects, onSelec
           )}
           onClick={() => onSelect(project)}
         >
-          <div className="aspect-[16/9] w-full overflow-hidden rounded-lg mb-3">
+          <div className="aspect-[16/9] w-full overflow-hidden rounded-lg mb-3 border border-gray-100/60">
             <img 
               src={project.imageUrl} 
               alt={project.title} 

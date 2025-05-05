@@ -4,6 +4,7 @@ import { Message } from '@/types/chat';
 import ProjectThumbnails from '@/components/project/ProjectThumbnails';
 import { Project } from '@/components/project/ProjectCard';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface MessageItemProps {
   message: Message;
@@ -11,8 +12,12 @@ interface MessageItemProps {
 }
 
 const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
+  // Format the timestamp
+  const formattedTime = message.timestamp ? 
+    format(new Date(message.timestamp), 'h:mm a') : '';
+
   return (
-    <div className="w-full mb-8">
+    <div className="w-full mb-12">
       <div className={`${message.sender === 'user' ? 'ml-auto max-w-[85%]' : 'mr-auto max-w-[90%]'}`}>
         <div className={cn(
           message.sender === 'user' ? 'text-right ml-auto' : 'text-left'
@@ -24,6 +29,13 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
               : 'text-foreground/90 text-xl font-light'
           )}>
             {message.content}
+          </p>
+          
+          <p className={cn(
+            "text-xs text-muted-foreground mt-2",
+            message.sender === 'user' ? 'text-right' : 'text-left'
+          )}>
+            {formattedTime}
           </p>
         </div>
         

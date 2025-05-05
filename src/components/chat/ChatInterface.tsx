@@ -6,6 +6,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { Message } from '@/types/chat';
 import { processUserMessage } from '@/services/chatService';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
@@ -19,6 +20,7 @@ const ChatInterface = () => {
   ]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,35 +70,42 @@ const ChatInterface = () => {
 
   const handleProjectSelect = (project: Project) => {
     setSelectedProject(project);
+    setProjectDialogOpen(true);
   };
 
   const handleCloseProjectDetail = () => {
     setSelectedProject(null);
+    setProjectDialogOpen(false);
   };
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      {selectedProject ? (
-        <ProjectDetail project={selectedProject} onClose={handleCloseProjectDetail} />
-      ) : (
-        <div className="flex flex-col h-full">
-          <div className="flex-grow overflow-hidden">
-            <MessageList 
-              messages={messages} 
-              isLoading={isLoading} 
-              onProjectSelect={handleProjectSelect} 
-            />
-          </div>
-          <div className="sticky bottom-0 bg-[#f9f9f7]/90 backdrop-blur-sm">
-            <MessageInput 
-              message={message}
-              setMessage={setMessage}
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-            />
-          </div>
+      <div className="flex flex-col h-full">
+        <div className="flex-grow overflow-hidden">
+          <MessageList 
+            messages={messages} 
+            isLoading={isLoading} 
+            onProjectSelect={handleProjectSelect} 
+          />
         </div>
-      )}
+        <div className="sticky bottom-0 bg-[#f9f9f7]/90 backdrop-blur-sm">
+          <MessageInput 
+            message={message}
+            setMessage={setMessage}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
+      
+      {/* Full-screen project detail dialog */}
+      <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
+        <DialogContent className="max-w-full w-full h-[90vh] p-0 rounded-lg">
+          {selectedProject && (
+            <ProjectDetail project={selectedProject} onClose={handleCloseProjectDetail} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
