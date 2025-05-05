@@ -9,6 +9,7 @@ export interface Project {
   client: string;
   description: string;
   imageUrl: string;
+  additionalImages?: string[];
   tags: string[];
   createdAt: string;
 }
