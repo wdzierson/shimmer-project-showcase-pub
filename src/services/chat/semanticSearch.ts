@@ -15,6 +15,41 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
 }> => {
   console.log('Attempting to find relevant projects using RAG');
   try {
+    // First try to find relevant content entries
+    console.log('Searching for relevant content entries first...');
+    const contentEntries = await findRelevantContentEntries(userMessage);
+    
+    if (contentEntries && contentEntries.length > 0) {
+      console.log(`Found ${contentEntries.length} relevant content entries`);
+      
+      // Use relevant content entries to generate a response
+      const context = contentEntries
+        .map(entry => `[${entry.type}] ${entry.title}: ${entry.content}`)
+        .join('\n\n');
+        
+      console.log('Generating AI response with context from content entries');
+      
+      const aiResponse = await getChatCompletion({
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful portfolio assistant. Use the following information to answer the user's question concisely: ${context}`
+          },
+          {
+            role: 'user',
+            content: userMessage
+          }
+        ],
+        model: 'gpt-4o-mini'
+      });
+      
+      return {
+        content: aiResponse,
+        showProjects: false
+      };
+    }
+    
+    // If no content entries found, fall back to project search
     const similarProjects = await searchSimilarProjects(userMessage);
     
     if (similarProjects && similarProjects.length > 0) {
@@ -72,38 +107,8 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
       }
     }
 
-    // No project results found, try content entries
-    const contentEntries = await findRelevantContentEntries(userMessage);
-    if (contentEntries && contentEntries.length > 0) {
-      // Use relevant content entries to generate a response
-      const context = contentEntries
-        .map(entry => `[${entry.type}] ${entry.title}: ${entry.content}`)
-        .join('\n\n');
-        
-      console.log('Generating AI response with context from content entries');
-      
-      const aiResponse = await getChatCompletion({
-        messages: [
-          {
-            role: 'system',
-            content: `You are a helpful portfolio assistant. Use the following information to answer the user's question concisely: ${context}`
-          },
-          {
-            role: 'user',
-            content: userMessage
-          }
-        ],
-        model: 'gpt-4o-mini'
-      });
-      
-      return {
-        content: aiResponse,
-        showProjects: false
-      };
-    }
-
     // No results found
-    return { content: "", showProjects: false };
+    return { content: "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?", showProjects: false };
   } catch (error) {
     console.error('Error during RAG process:', error);
     throw error;
@@ -118,17 +123,19 @@ export const findRelevantContentEntries = async (userMessage: string) => {
     console.log('Searching for relevant content entries...');
     
     // Generate embedding for the query
-    const { data: embeddingData } = await supabase.functions.invoke('generate-embeddings', {
+    const { data: embeddingData, error: embeddingError } = await supabase.functions.invoke('generate-embeddings', {
       body: { text: userMessage }
     });
     
-    if (!embeddingData || !embeddingData.embedding) {
-      console.error('Failed to generate embedding for content search');
+    if (embeddingError || !embeddingData || !embeddingData.embedding) {
+      console.error('Failed to generate embedding for content search:', embeddingError);
       return [];
     }
     
+    console.log('Embedding generated successfully, searching for similar content...');
+    
     // Use embedding to search for similar content
-    const { data: searchData } = await supabase.functions.invoke('search-content', {
+    const { data: searchData, error: searchError } = await supabase.functions.invoke('search-content', {
       body: { 
         embedding: embeddingData.embedding, 
         threshold: 0.3, 
@@ -136,24 +143,36 @@ export const findRelevantContentEntries = async (userMessage: string) => {
       }
     });
     
-    if (!searchData || !searchData.entries) {
+    if (searchError) {
+      console.error('Error searching for content entries:', searchError);
+      return [];
+    }
+    
+    if (!searchData || !searchData.entries || searchData.entries.length === 0) {
       console.log('No relevant content entries found');
       return [];
     }
     
-    console.log(`Found ${searchData.entries.length} relevant content entries`);
+    console.log(`Found ${searchData.entries.length} relevant content entries with IDs:`, 
+      searchData.entries.map((entry: any) => entry.content_id));
     
     // Fetch the complete content entries
     const contentIds = searchData.entries.map((entry: any) => entry.content_id);
     
     if (contentIds.length === 0) return [];
     
-    const { data: contentEntries } = await supabase
+    const { data: contentEntries, error: contentError } = await supabase
       .from('content_entries')
       .select('*')
       .in('id', contentIds)
       .eq('visible', true);
       
+    if (contentError) {
+      console.error('Error fetching content entries:', contentError);
+      return [];
+    }
+    
+    console.log(`Retrieved ${contentEntries?.length || 0} full content entries`);
     return contentEntries || [];
   } catch (error) {
     console.error('Error searching for content entries:', error);

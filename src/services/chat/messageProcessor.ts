@@ -41,10 +41,16 @@ export const processUserMessage = async (
     };
   }
   
-  // Extract potential keywords from the user message
+  // Try to use RAG to find relevant content or projects
+  const semanticResults = await findRelevantProjects(userMessage);
+  if (semanticResults.content) {
+    return semanticResults;
+  }
+  
+  // Extract potential keywords from the user message as a fallback
   const potentialKeywords = extractKeywords(userMessage);
   if (potentialKeywords.length > 0) {
-    // Try direct keyword search first
+    // Try direct keyword search
     const keywordMatchedProjects = await searchProjectsByKeywords(potentialKeywords);
     if (keywordMatchedProjects.length > 0) {
       console.log(`Found ${keywordMatchedProjects.length} projects matching keywords`);
@@ -54,12 +60,6 @@ export const processUserMessage = async (
         showProjects: true
       };
     }
-  }
-  
-  // Try to use RAG to find relevant projects if no direct keyword matches
-  const semanticResults = await findRelevantProjects(userMessage);
-  if (semanticResults.projects && semanticResults.projects.length > 0) {
-    return semanticResults;
   }
   
   // If we reach here with no results yet, check if this is a general work-related query
@@ -83,7 +83,7 @@ export const processUserMessage = async (
   
   // If no matching projects found, return a helpful message without projects
   return {
-    content: "I don't currently have projects that match your specific question. Would you like to see my portfolio to browse all projects?",
+    content: "I don't currently have information that matches your specific question. Would you like to see my portfolio to browse all projects?",
     showProjects: false
   };
 };
