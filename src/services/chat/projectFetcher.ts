@@ -17,6 +17,9 @@ export const fetchProjects = async (projectIds?: string[]): Promise<Project[]> =
         client,
         description,
         created_at,
+        involvement,
+        year,
+        liveurl,
         project_images (image_url, is_primary),
         project_tags (
           tags (name)
@@ -39,15 +42,29 @@ export const fetchProjects = async (projectIds?: string[]): Promise<Project[]> =
     console.log(`Found ${data.length} projects`, data);
     
     // Transform data to match Project type
-    return data.map(item => ({
-      id: item.id,
-      title: item.title,
-      client: item.client,
-      description: item.description,
-      imageUrl: item.project_images.find((img: any) => img.is_primary)?.image_url || '',
-      tags: item.project_tags.map((tag: any) => tag.tags.name),
-      createdAt: item.created_at
-    }));
+    return data.map(item => {
+      // Get primary image
+      const primaryImage = item.project_images.find((img: any) => img.is_primary)?.image_url || '';
+      
+      // Get additional images (non-primary)
+      const additionalImages = item.project_images
+        .filter((img: any) => !img.is_primary)
+        .map((img: any) => img.image_url);
+      
+      return {
+        id: item.id,
+        title: item.title,
+        client: item.client,
+        description: item.description,
+        imageUrl: primaryImage,
+        additionalImages: additionalImages,
+        tags: item.project_tags.map((tag: any) => tag.tags.name),
+        createdAt: item.created_at,
+        year: item.year,
+        involvement: item.involvement,
+        liveUrl: item.liveurl
+      };
+    });
   } catch (error) {
     console.error('Error in fetchProjects:', error);
     return [];
