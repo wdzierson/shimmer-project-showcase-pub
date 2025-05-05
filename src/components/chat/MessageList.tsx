@@ -4,6 +4,7 @@ import MessageItem from './MessageItem';
 import { Message } from '@/types/chat';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Sparkle, Lightbulb, MessageSquareQuestion } from 'lucide-react';
 
 interface SuggestionButton {
   text: string;
@@ -34,6 +35,20 @@ const MessageList = ({
     }
   }, [messages, suggestions]);
 
+  // Get an icon based on the suggestion index
+  const getIconForSuggestion = (index: number) => {
+    switch (index % 3) {
+      case 0:
+        return <Sparkle className="mr-2" size={18} />;
+      case 1:
+        return <Lightbulb className="mr-2" size={18} />;
+      case 2:
+        return <MessageSquareQuestion className="mr-2" size={18} />;
+      default:
+        return <Sparkle className="mr-2" size={18} />;
+    }
+  };
+
   return (
     <div className="py-6">
       <div className="flex flex-col space-y-6">
@@ -53,14 +68,15 @@ const MessageList = ({
                 key={index}
                 onClick={() => onSuggestionClick?.(suggestion.text)}
                 className={cn(
-                  "bg-zinc-800 text-white hover:bg-zinc-700 rounded-full transition-opacity duration-500 opacity-0 w-auto",
-                  "animate-fade-in"
+                  "text-[#333333] hover:bg-[#ff8a6a] rounded-full transition-opacity duration-500 opacity-0 w-auto flex items-center",
+                  "animate-fade-in bg-[#FF977B]"
                 )}
                 style={{ 
                   animationDelay: `${suggestion.delay}ms`,
                   animationFillMode: 'forwards'
                 }}
               >
+                {getIconForSuggestion(index)}
                 {suggestion.text}
               </Button>
             ))}
