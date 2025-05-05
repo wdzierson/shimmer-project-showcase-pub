@@ -10,7 +10,7 @@ const Index = () => {
       <HomeHeader />
       
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-        <div className="lg:w-[380px] px-4 md:px-8 lg:px-12 pt-36 pb-12">
+        <div className="lg:w-[380px] px-4 md:px-8 lg:px-12 pt-36 pb-12 flex flex-col h-full">
           <HomeIntro />
         </div>
         <div className="flex-1 min-w-0 px-4 md:px-8 lg:px-12 pt-16 pb-0">

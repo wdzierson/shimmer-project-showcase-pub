@@ -5,22 +5,24 @@ import { Github } from 'lucide-react';
 
 const HomeIntro = () => {
   return (
-    <div className="lg:sticky lg:top-36 space-y-6 mb-12 lg:mb-0">
-      <h2 className={cn(
-        "font-serif text-4xl md:text-5xl font-medium text-foreground",
-        "tracking-tight leading-[1.15]"
-      )}>
-        AI Portfolio
-      </h2>
+    <div className="lg:sticky lg:top-36 flex flex-col justify-between h-full">
+      <div className="space-y-6">
+        <h2 className={cn(
+          "font-serif text-4xl md:text-5xl font-medium text-foreground",
+          "tracking-tight leading-[1.15]"
+        )}>
+          AI Portfolio
+        </h2>
+        
+        <p className={cn(
+          "text-lg text-foreground/80 leading-relaxed",
+          "font-light max-w-prose"
+        )}>
+          I built this AI version of a portfolio for fun. Ask it about my work or what I like to do, etc.
+        </p>
+      </div>
       
-      <p className={cn(
-        "text-lg text-foreground/80 leading-relaxed",
-        "font-light max-w-prose"
-      )}>
-        Let's chat
-      </p>
-      
-      <div className="space-y-4">
+      <div className="space-y-4 mt-auto pt-12">
         <div>
           <a href="https://github.com/willdzierson" 
              className="flex items-center gap-2 text-foreground/80 hover:text-foreground">
