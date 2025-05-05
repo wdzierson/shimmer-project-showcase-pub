@@ -88,7 +88,7 @@ export const processUserMessage = async (
   console.log('Processing user message:', userMessage);
   
   // Check for the "show me recent work" or similar commands
-  const showProjectsRegex = /show\s+(?:me\s+)?(?:recent\s+)?(?:work|projects?|portfolio)/i;
+  const showProjectsRegex = /show\s+(?:me\s+)?(?:recent\s+)?(?:work|projects?|portfolio|all)/i;
   if (
     showProjectsRegex.test(userMessage.toLowerCase()) ||
     userMessage.toLowerCase().includes('portfolio') ||
@@ -135,43 +135,83 @@ export const processUserMessage = async (
     if (similarProjects && similarProjects.length > 0) {
       console.log(`Found ${similarProjects.length} similar projects via RAG`);
       
+      // Check if these are fallback results (similarity = 0)
+      const isFallbackResults = similarProjects.every(p => p.similarity === 0);
+      
       // Get project IDs to fetch full project data
       const projectIds = similarProjects.map(p => p.project_id);
       const projects = await fetchProjects(projectIds);
       
       if (projects.length > 0) {
-        // Use OpenAI to generate a response based on the relevant projects
-        const context = similarProjects.map(p => p.content).join('\n\n');
-        console.log('Generating AI response with context from similar projects');
-        
-        const aiResponse = await getChatCompletion({
-          messages: [
-            {
-              role: 'system',
-              content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question: ${context}`
-            },
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ],
-          model: 'gpt-4o-mini'
-        });
-        
-        return {
-          content: aiResponse,
-          projects,
-          showProjects: true
-        };
+        if (isFallbackResults) {
+          // These are fallback results, so use a generic response
+          return {
+            content: "Here are some projects that might be of interest to you:",
+            projects,
+            showProjects: true
+          };
+        } else {
+          // Use OpenAI to generate a response based on the relevant projects
+          const context = similarProjects
+            .filter(p => p.content) // Only include projects with content
+            .map(p => p.content)
+            .join('\n\n');
+            
+          console.log('Generating AI response with context from similar projects');
+          
+          let aiResponse;
+          if (context) {
+            aiResponse = await getChatCompletion({
+              messages: [
+                {
+                  role: 'system',
+                  content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question concisely: ${context}`
+                },
+                {
+                  role: 'user',
+                  content: userMessage
+                }
+              ],
+              model: 'gpt-4o-mini'
+            });
+          } else {
+            aiResponse = "I found some projects that might be relevant to your question:";
+          }
+          
+          return {
+            content: aiResponse,
+            projects,
+            showProjects: true
+          };
+        }
       }
     }
   } catch (error) {
     console.error('Error during RAG process:', error);
   }
   
+  // If we reach here with no results yet, check if this is a general work-related query
+  // and return all projects as a fallback
+  if (userMessage.toLowerCase().includes('work') ||
+      userMessage.toLowerCase().includes('project') ||
+      userMessage.toLowerCase().includes('portfolio') ||
+      userMessage.toLowerCase().includes('experience')) {
+    
+    console.log('Work-related query detected, falling back to all projects');
+    const allProjects = await fetchProjects();
+    
+    if (allProjects.length > 0) {
+      return {
+        content: "Here are some projects I've worked on that might be relevant:",
+        projects: allProjects,
+        showProjects: true
+      };
+    }
+  }
+  
   // If no matching projects found, return a helpful message without projects
   return {
-    content: "I don't have specific projects matching your question. Could you try asking in a different way, or ask to see my portfolio to browse all projects?",
+    content: "I don't currently have projects that match your specific question. Would you like to see my portfolio to browse all projects?",
     showProjects: false
   };
 };
@@ -187,7 +227,7 @@ function extractKeywords(message: string): string[] {
     'medical', 'banking', 'insurance', 'automotive', 'real estate',
     'mobile', 'web', 'app', 'application', 'website', 'platform',
     'e-commerce', 'marketing', 'analytics', 'design', 'development',
-    'frontend', 'backend', 'fullstack', 'ui', 'ux'
+    'frontend', 'backend', 'fullstack', 'ui', 'ux', 'search'
   ];
   
   // Extract question focus
@@ -197,7 +237,9 @@ function extractKeywords(message: string): string[] {
   if (lowerMessage.includes('experience with') || 
       lowerMessage.includes('worked on') || 
       lowerMessage.includes('have any') ||
-      lowerMessage.includes('do you have')) {
+      lowerMessage.includes('do you have') ||
+      lowerMessage.includes('work in') ||
+      lowerMessage.includes('work with')) {
     
     industryKeywords.forEach(keyword => {
       if (lowerMessage.includes(keyword)) {

@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { embedding, threshold = 0.5, limit = 5 } = await req.json();
+    const { embedding, threshold = 0.3, limit = 10 } = await req.json();
     console.log('Received request to search for similar projects');
 
     if (!embedding) {
@@ -60,7 +60,36 @@ serve(async (req) => {
     }
 
     if (!similarProjects || similarProjects.length === 0) {
-      console.log('No similar projects found');
+      console.log('No similar projects found with vector search');
+      
+      // Fallback: If no projects found through vector search, try to get projects directly
+      // This ensures we at least return some projects when semantic search fails
+      const { data: fallbackProjects, error: fallbackError } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('visible', true)
+        .limit(5);
+
+      if (fallbackError) {
+        console.error('Error fetching fallback projects:', fallbackError);
+      } else if (fallbackProjects && fallbackProjects.length > 0) {
+        console.log('Using fallback projects:', fallbackProjects.length);
+        // Return minimal project data - the client will fetch full details
+        return new Response(
+          JSON.stringify({ 
+            projects: fallbackProjects.map(p => ({
+              id: null, // Not an embedding ID
+              project_id: p.id,
+              content: null, // No matched content
+              similarity: 0 // Flag as fallback match
+            })),
+            fallback: true
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else {
+        console.log('No fallback projects found');
+      }
     } else {
       console.log('Found similar projects:', similarProjects.length);
     }

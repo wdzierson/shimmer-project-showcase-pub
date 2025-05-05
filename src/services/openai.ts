@@ -49,7 +49,9 @@ export async function generateEmbeddings(text: string): Promise<number[]> {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${supabaseAnon}`,
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ 
+        text: text,
+      }),
     });
     
     if (!response.ok) {
@@ -85,7 +87,7 @@ export async function searchSimilarProjects(query: string): Promise<any[]> {
     // Generate embedding for the query
     const embedding = await generateEmbeddings(query);
     
-    // Use embedding to search for similar projects
+    // Use embedding to search for similar projects with lower threshold
     const response = await fetch('https://uilvozcryifnpldfpwiz.supabase.co/functions/v1/search-projects', {
       method: 'POST',
       headers: {
@@ -94,8 +96,8 @@ export async function searchSimilarProjects(query: string): Promise<any[]> {
       },
       body: JSON.stringify({ 
         embedding, 
-        threshold: 0.5, // Lower threshold to get more results
-        limit: 5 
+        threshold: 0.3, // Lower threshold to get more results (was 0.5)
+        limit: 10 // Increase limit to get more potential matches (was 5)
       }),
     });
     
