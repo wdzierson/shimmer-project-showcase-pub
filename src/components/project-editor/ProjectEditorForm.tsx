@@ -24,6 +24,8 @@ interface ProjectEditorFormProps {
   setLiveUrl: (value: string) => void;
   involvement: string;
   setInvolvement: (value: string) => void;
+  year: number;
+  setYear: (value: number) => void;
   tags: string[];
   setTags: (tags: string[]) => void;
   newTag: string;
@@ -51,6 +53,8 @@ const ProjectEditorForm = ({
   setLiveUrl,
   involvement,
   setInvolvement,
+  year,
+  setYear,
   tags,
   setTags,
   newTag,
@@ -75,6 +79,8 @@ const ProjectEditorForm = ({
         setDescription={setDescription}
         involvement={involvement}
         setInvolvement={setInvolvement}
+        year={year}
+        setYear={setYear}
       />
       
       <ProjectUrlField

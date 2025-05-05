@@ -13,6 +13,7 @@ export interface ProjectSubmitData {
   additionalImages?: string[];
   liveUrl?: string;
   involvement?: string;
+  year: number;
   tags: string[];
   isNew: boolean;
 }
@@ -26,6 +27,7 @@ export const saveProject = async ({
   additionalImages = [],
   liveUrl = '',
   involvement = '',
+  year,
   tags,
   isNew
 }: ProjectSubmitData) => {
@@ -45,7 +47,7 @@ export const saveProject = async ({
       title,
       client,
       description,
-      year: new Date().getFullYear(),
+      year: year || new Date().getFullYear(),
       updated_at: new Date().toISOString(),
       ...(isNew && { created_at: new Date().toISOString() }),
       ...(liveUrl && { liveurl: liveUrl }),
@@ -188,7 +190,7 @@ export const saveProject = async ({
       console.log('Generating content for embeddings...');
       
       // Generate content by directly concatenating project data with tags
-      const contentData = `${title} ${client} ${description} ${tags.join(' ')}`;
+      const contentData = `${title} ${client} ${description} ${year} ${involvement || ''} ${tags.join(' ')}`;
       
       if (contentData) {
         console.log('Content generated:', contentData);

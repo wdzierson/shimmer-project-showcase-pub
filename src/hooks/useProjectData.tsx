@@ -13,6 +13,7 @@ export interface ProjectFormData {
   additionalImages: string[];
   liveUrl: string;
   involvement: string;
+  year: number;
   tags: string[];
   newTag: string;
 }
@@ -31,6 +32,7 @@ export const useProjectData = () => {
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [liveUrl, setLiveUrl] = useState('');
   const [involvement, setInvolvement] = useState('');
+  const [year, setYear] = useState<number>(new Date().getFullYear());
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,9 @@ export const useProjectData = () => {
         setTitle(projectData.title);
         setClient(projectData.client);
         setDescription(projectData.description);
+        
+        // Set year if available, otherwise default to current year
+        setYear(projectData.year || new Date().getFullYear());
         
         // Fetch images
         const { data: imageData } = await supabase
@@ -169,6 +174,8 @@ export const useProjectData = () => {
       setLiveUrl,
       involvement,
       setInvolvement,
+      year,
+      setYear,
       tags,
       setTags,
       newTag,

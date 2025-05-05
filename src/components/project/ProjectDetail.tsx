@@ -90,13 +90,27 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose }) => {
             </div>
           </div>
           
-          <div>
-            <div className="text-sm text-muted-foreground mb-1">DATE</div>
-            <p>{new Date(project.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long'
-            })}</p>
+          <div className="flex flex-wrap gap-6">
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">YEAR</div>
+              <p>{project.year || new Date(project.createdAt).getFullYear()}</p>
+            </div>
+            
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">DATE CREATED</div>
+              <p>{new Date(project.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long'
+              })}</p>
+            </div>
           </div>
+          
+          {project.involvement && (
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">INVOLVEMENT</div>
+              <p>{project.involvement}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
