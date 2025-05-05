@@ -65,6 +65,11 @@ export const processUserMessage = async (
     // Sort the projects if there are any
     if (semanticResults.projects && semanticResults.projects.length > 0) {
       semanticResults.projects = sortProjectsByYear(semanticResults.projects);
+      // Make sure showProjects is true only when we actually have projects to show
+      semanticResults.showProjects = true;
+    } else {
+      // Explicitly set showProjects to false when no projects
+      semanticResults.showProjects = false;
     }
     return semanticResults;
   }
