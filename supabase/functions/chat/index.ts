@@ -79,32 +79,40 @@ serve(async (req) => {
           if (done) break;
           
           buffer += decoder.decode(value, { stream: true });
+          
+          // Split by double newlines which separate SSE events
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
           
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
-              if (data === '[DONE]') continue;
+              if (data === '[DONE]') {
+                await writer.write(new TextEncoder().encode('data: [DONE]\n\n'));
+                continue;
+              }
               
               try {
                 const parsed = JSON.parse(data);
-                const content = parsed.choices[0].delta.content;
+                const content = parsed.choices[0]?.delta?.content || '';
                 if (content) {
                   await writer.write(
                     new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`)
                   );
                 }
               } catch (error) {
-                console.error('Error parsing OpenAI stream:', error, data);
+                console.error('Error parsing OpenAI stream:', error, line);
               }
             }
           }
         }
       } catch (error) {
         console.error('Error processing OpenAI stream:', error);
+        await writer.write(
+          new TextEncoder().encode(`event: error\ndata: ${JSON.stringify({ error: error.message })}\n\n`)
+        );
       } finally {
-        await writer.write(new TextEncoder().encode('event: done\ndata: Stream finished\n\n'));
+        await writer.write(new TextEncoder().encode('data: [DONE]\n\n'));
         await writer.close();
       }
     })();

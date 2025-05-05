@@ -80,11 +80,18 @@ export async function getStreamingChatCompletion(
       
       for (const line of lines) {
         if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          
+          if (data === '[DONE]') {
+            console.log('Stream completed');
+            continue;
+          }
+          
           try {
-            const data = JSON.parse(line.slice(6));
-            if (data.content) {
-              fullText += data.content;
-              onChunk(data.content);
+            const parsed = JSON.parse(data);
+            if (parsed.content) {
+              fullText += parsed.content;
+              onChunk(parsed.content);
             }
           } catch (error) {
             console.error('Error parsing stream data:', error, line);

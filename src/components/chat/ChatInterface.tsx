@@ -9,6 +9,7 @@ import { processUserMessage } from '@/services/chatService';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getStreamingChatCompletion } from '@/services/openai';
+import { useToast } from '@/hooks/use-toast';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
@@ -24,6 +25,7 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const { toast } = useToast();
   
   // Array of suggestion buttons that will fade in
   const suggestions = [
@@ -92,6 +94,12 @@ const ChatInterface = () => {
     } catch (error) {
       console.error('Error processing message:', error);
       
+      toast({
+        title: "Error",
+        description: "Failed to process your message. Please try again.",
+        variant: "destructive"
+      });
+      
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: "I'm sorry, I encountered an error processing your request. Please try again.",
@@ -145,6 +153,12 @@ const ChatInterface = () => {
       })
       .catch(error => {
         console.error('Error processing suggestion:', error);
+        
+        toast({
+          title: "Error",
+          description: "Failed to process your message. Please try again.",
+          variant: "destructive"
+        });
         
         const errorResponse: Message = {
           id: (Date.now() + 1).toString(),
