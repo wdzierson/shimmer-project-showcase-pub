@@ -79,7 +79,7 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-background">
       <div className="flex flex-col h-full">
         <div className="flex-grow overflow-hidden">
           <MessageList 
@@ -88,7 +88,7 @@ const ChatInterface = () => {
             onProjectSelect={handleProjectSelect} 
           />
         </div>
-        <div className="sticky bottom-0 bg-[#f9f9f7]/90 backdrop-blur-sm">
+        <div className="sticky bottom-0">
           <MessageInput 
             message={message}
             setMessage={setMessage}
