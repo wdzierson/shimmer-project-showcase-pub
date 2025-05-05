@@ -27,7 +27,7 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
           </p>
         </div>
         
-        <div className="text-xs text-muted-foreground mt-1.5 font-mono text-left">
+        <div className={`text-xs text-muted-foreground mt-1.5 font-mono ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
           {message.timestamp.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
