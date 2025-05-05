@@ -19,7 +19,7 @@ const MessageList = ({ messages, isLoading, onProjectSelect }: MessageListProps)
   }, [messages]);
 
   return (
-    <div className="flex-grow overflow-y-auto p-6 md:p-12 lg:p-16 space-y-6">
+    <div className="flex-grow overflow-y-auto p-4 md:px-8 lg:px-12 space-y-5">
       {messages.map((msg) => (
         <MessageItem 
           key={msg.id} 
@@ -29,7 +29,7 @@ const MessageList = ({ messages, isLoading, onProjectSelect }: MessageListProps)
       ))}
       
       {isLoading && (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 ml-4">
           <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></div>
           <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
           <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '0.4s' }}></div>

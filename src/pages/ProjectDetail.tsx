@@ -47,7 +47,15 @@ const ProjectDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      {/* Custom header that doesn't show the portfolio title */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
+        <div className="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
+          <div className="text-2xl font-medium tracking-tight">
+            {project.title}
+          </div>
+        </div>
+      </div>
+      
       <main className="flex-grow pt-24 px-4 md:px-6">
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto">
@@ -58,7 +66,7 @@ const ProjectDetail = () => {
               <h1 className="case-study-title mb-6">{project.title}</h1>
               <div className="flex flex-wrap gap-1 mb-8">
                 {project.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
+                  <Badge key={tag} variant="secondary" className="bg-gray-200 text-gray-700 hover:bg-gray-300">
                     {tag}
                   </Badge>
                 ))}
