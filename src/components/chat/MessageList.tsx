@@ -1,10 +1,9 @@
-
 import React, { useEffect, useRef } from 'react';
 import MessageItem from './MessageItem';
 import { Message } from '@/types/chat';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Sparkle, Lightbulb, MessageSquareQuestion } from 'lucide-react';
+import { Sparkle, Lightbulb, MessageSquareQuote } from 'lucide-react';
 
 interface SuggestionButton {
   text: string;
@@ -43,7 +42,7 @@ const MessageList = ({
       case 1:
         return <Lightbulb className="mr-2" size={18} />;
       case 2:
-        return <MessageSquareQuestion className="mr-2" size={18} />;
+        return <MessageSquareQuote className="mr-2" size={18} />;
       default:
         return <Sparkle className="mr-2" size={18} />;
     }
