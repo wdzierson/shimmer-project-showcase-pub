@@ -1,17 +1,19 @@
 
 import React from 'react';
 import ChatInterface from '@/components/chat/ChatInterface';
+import HomeHeader from '@/components/home/HomeHeader';
+import HomeIntro from '@/components/home/HomeIntro';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <div className="absolute top-6 left-6 z-10">
-        <h1 className="text-2xl font-medium text-foreground mono tracking-tight">Will's Portfolio</h1>
-        <p className="text-xs text-muted-foreground mt-2 font-light tracking-wide">chat with my work</p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-[#f8f8f6]">
+      <HomeHeader />
       
-      <div className="flex-grow flex items-stretch pt-16">
-        <ChatInterface />
+      <div className="flex flex-col lg:flex-row flex-grow px-6 md:px-16 lg:px-24 pt-32 pb-8 gap-12">
+        <HomeIntro />
+        <div className="flex-1 min-w-0">
+          <ChatInterface />
+        </div>
       </div>
     </div>
   );

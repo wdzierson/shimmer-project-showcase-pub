@@ -10,32 +10,31 @@ interface ProjectThumbnailsProps {
 
 const ProjectThumbnails: React.FC<ProjectThumbnailsProps> = ({ projects, onSelect }) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div className="space-y-8">
       {projects.map((project) => (
         <div 
           key={project.id}
-          className="overflow-hidden rounded-md border bg-background cursor-pointer hover:shadow-md transition-shadow"
+          className="overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
           onClick={() => onSelect(project)}
         >
-          <div className="aspect-video w-full overflow-hidden">
+          <div className="aspect-[16/9] w-full overflow-hidden rounded-lg mb-4">
             <img 
               src={project.imageUrl} 
               alt={project.title} 
               className="h-full w-full object-cover"
             />
           </div>
-          <div className="p-3">
-            <h4 className="text-sm font-medium line-clamp-1">{project.title}</h4>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {project.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs px-1">
-                  {tag}
-                </Badge>
-              ))}
-              {project.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground">+{project.tags.length - 2}</span>
-              )}
-            </div>
+          <h3 className="text-xl font-medium text-foreground">{project.title}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{project.client}</p>
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {project.tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs px-2 py-1">
+                {tag}
+              </Badge>
+            ))}
+            {project.tags.length > 3 && (
+              <span className="text-xs text-muted-foreground">+{project.tags.length - 3}</span>
+            )}
           </div>
         </div>
       ))}

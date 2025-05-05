@@ -22,13 +22,13 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
   }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 md:p-8 border-t border-border/20 flex gap-4 bg-background/80 backdrop-blur-sm">
+    <form onSubmit={handleSubmit} className="p-6 md:p-8 border-t border-gray-200 flex gap-4">
       <Textarea
         ref={inputRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Ask about my work, skills, or interests..."
-        className="resize-none min-h-[60px] text-lg chat-input bg-transparent border-none focus-visible:ring-0 p-0 shadow-none font-light"
+        placeholder="Type something..."
+        className="resize-none min-h-[24px] max-h-32 text-lg bg-transparent border-none focus-visible:ring-0 p-0 shadow-none font-light"
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
