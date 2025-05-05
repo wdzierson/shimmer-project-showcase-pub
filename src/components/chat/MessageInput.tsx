@@ -23,7 +23,10 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
   }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="py-6 px-4 border-t border-gray-300 flex gap-4 items-end bg-[#F8F4ED]">
+    <form 
+      onSubmit={handleSubmit} 
+      className="sticky bottom-0 py-6 px-4 border-t border-gray-300 flex gap-4 items-end bg-[#F8F4ED] shadow-md"
+    >
       <Textarea
         ref={inputRef}
         value={message}

@@ -6,7 +6,7 @@ import HomeIntro from '@/components/home/HomeIntro';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f9f9f7]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f9f9f7] to-[#e9ecf4]">
       <HomeHeader />
       
       <div className="flex flex-col lg:flex-row flex-grow px-4 md:px-8 lg:px-12 pt-36 pb-12 gap-12 max-w-[1400px] mx-auto">

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { GitHub } from 'lucide-react';
 
 const HomeIntro = () => {
   return (
@@ -9,7 +10,7 @@ const HomeIntro = () => {
         "font-serif text-4xl md:text-5xl font-medium text-foreground",
         "tracking-tight leading-[1.15]"
       )}>
-        Portfolio Chatbot
+        AI Portfolio
       </h2>
       
       <p className={cn(
@@ -20,6 +21,23 @@ const HomeIntro = () => {
         history, and personal interests. It only knows stuff about me and 
         my work because it uses RAG to restrict its knowledge.
       </p>
+      
+      <div className="space-y-4">
+        <a href="https://github.com/willdzierson" 
+           className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
+          <GitHub size={18} />
+          <span>View on GitHub</span>
+        </a>
+        
+        <p className="text-foreground/80">
+          Looking for <a 
+            href="https://projectariadne.info" 
+            className="text-foreground hover:underline"
+            target="_blank" 
+            rel="noopener noreferrer"
+          >Project Ariadne</a>?
+        </p>
+      </div>
     </div>
   );
 };

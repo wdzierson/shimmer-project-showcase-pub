@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Project } from '@/components/project/ProjectCard';
 import ProjectDetail from '@/components/project/ProjectDetail';
 import MessageList from './MessageList';
@@ -7,6 +7,8 @@ import MessageInput from './MessageInput';
 import { Message } from '@/types/chat';
 import { processUserMessage } from '@/services/chatService';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
@@ -21,6 +23,25 @@ const ChatInterface = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  // Array of suggestion buttons that will fade in
+  const suggestions = [
+    { text: "Show me recent work", delay: 0 },
+    { text: "Briefly tell me about your work experience", delay: 300 },
+    { text: "Tell me about your interests", delay: 600 }
+  ];
+
+  useEffect(() => {
+    // Show suggestion buttons after 3 seconds if no messages have been sent
+    const timer = setTimeout(() => {
+      if (messages.length === 1) {
+        setShowSuggestions(true);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +59,7 @@ const ChatInterface = () => {
     setMessages((prev) => [...prev, userMessage]);
     setMessage('');
     setIsLoading(true);
+    setShowSuggestions(false); // Hide suggestions once user starts typing
     
     try {
       const response = await processUserMessage(message);
@@ -68,6 +90,11 @@ const ChatInterface = () => {
     }
   };
 
+  const handleSuggestionClick = (suggestionText: string) => {
+    setMessage(suggestionText);
+    handleSubmit(new Event('submit') as unknown as React.FormEvent);
+  };
+
   const handleProjectSelect = (project: Project) => {
     setSelectedProject(project);
     setProjectDialogOpen(true);
@@ -85,7 +112,9 @@ const ChatInterface = () => {
           <MessageList 
             messages={messages} 
             isLoading={isLoading} 
-            onProjectSelect={handleProjectSelect} 
+            onProjectSelect={handleProjectSelect}
+            suggestions={showSuggestions ? suggestions : []}
+            onSuggestionClick={handleSuggestionClick}
           />
         </div>
         <div className="sticky bottom-0">
