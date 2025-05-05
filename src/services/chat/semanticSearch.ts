@@ -1,3 +1,4 @@
+
 import { searchSimilarProjects } from '@/services/openai';
 import { getChatCompletion } from '@/services/openai';
 import { fetchProjects } from './projectFetcher';
@@ -66,7 +67,8 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
       });
       
       // If we also have projects to display, show them along with the AI response
-      if (projectsToDisplay.length > 0) {
+      // But only if they're actually relevant
+      if (projectsToDisplay.length > 0 && hasRelevantProjects) {
         console.log(`Including ${projectsToDisplay.length} projects with content response`);
         return {
           content: aiResponse,
@@ -120,17 +122,19 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
           showProjects: true
         };
       } else {
-        // These are fallback results
+        // For non-project queries, don't show fallback results
         return {
-          content: "Here are some projects that might be of interest to you:",
-          projects: projectsToDisplay,
-          showProjects: true
+          content: "I don't have specific information about that. Is there something about my work or projects you'd like to know?",
+          showProjects: false 
         };
       }
     }
 
     // No results found
-    return { content: "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?", showProjects: false };
+    return { 
+      content: "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?", 
+      showProjects: false 
+    };
   } catch (error) {
     console.error('Error during RAG process:', error);
     throw error;

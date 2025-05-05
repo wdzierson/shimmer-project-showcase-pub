@@ -57,22 +57,52 @@ export const processUserMessage = async (
     };
   }
   
-  // Try to use RAG to find relevant content or projects
+  // Try to use RAG to find relevant content entries first
+  console.log('Searching for relevant content entries first...');
+  const contentEntries = await findRelevantContentEntries(userMessage);
+  
+  if (contentEntries && contentEntries.length > 0) {
+    console.log(`Found ${contentEntries.length} relevant content entries, prioritizing these`);
+    // If we have content matches, use them to generate a response without showing projects
+    // unless the content is specifically about projects
+    const context = contentEntries
+      .map(entry => `[${entry.type}] ${entry.title}: ${entry.content}`)
+      .join('\n\n');
+      
+    const aiResponse = await getChatCompletion({
+      messages: [
+        {
+          role: 'system',
+          content: `You are a helpful portfolio assistant. Use the following information to answer the user's question concisely: ${context}`
+        },
+        {
+          role: 'user',
+          content: userMessage
+        }
+      ],
+      model: 'gpt-4o-mini'
+    });
+    
+    return {
+      content: aiResponse,
+      showProjects: false // Don't show projects when we have content matches
+    };
+  }
+  
+  // If no content entries found, try to find relevant projects
+  console.log('No relevant content entries found, searching for projects...');
   const semanticResults = await findRelevantProjects(userMessage);
   
-  // If we got a meaningful result with either content or projects, return it
-  if (semanticResults.content && semanticResults.content !== "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?") {
-    // Only show projects if there are actually relevant projects
-    if (semanticResults.projects && semanticResults.projects.length > 0) {
-      semanticResults.projects = sortProjectsByYear(semanticResults.projects);
-      semanticResults.showProjects = true;
-    } else {
-      semanticResults.showProjects = false;
-    }
+  // Check if the semantic search returned actual relevant projects (not fallback)
+  if (semanticResults.projects && 
+      semanticResults.projects.length > 0 && 
+      semanticResults.showProjects === true) {
+    console.log('Found relevant projects via semantic search');
+    semanticResults.projects = sortProjectsByYear(semanticResults.projects);
     return semanticResults;
   }
   
-  // Extract potential keywords from the user message as a fallback
+  // Extract potential keywords from the message for additional search
   const potentialKeywords = extractKeywords(userMessage);
   if (potentialKeywords.length > 0) {
     // Try direct keyword search for projects
@@ -88,8 +118,7 @@ export const processUserMessage = async (
     }
   }
   
-  // If we reach here with no results yet, check if this is a general work-related query
-  // and return all projects as a fallback ONLY if it's work/project related
+  // If this is a work-related query and we've found no matches, show all projects as a fallback
   if (isProjectOrWorkMention) {
     console.log('Work-related query detected, falling back to all projects');
     const allProjects = await fetchProjects();
@@ -104,9 +133,15 @@ export const processUserMessage = async (
     }
   }
   
-  // For general questions that don't match any content or keywords, don't show projects
+  // For general questions that don't match any content or keywords,
+  // and aren't explicitly work-related, don't show projects
+  console.log('Query appears to be general knowledge, not showing projects');
   return {
     content: "I don't have specific information about that. Is there something about my work or projects you'd like to know?",
     showProjects: false
   };
 };
+
+// Add the missing import for getChatCompletion
+import { getChatCompletion } from '@/services/openai';
+import { findRelevantContentEntries } from './semanticSearch';
