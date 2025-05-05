@@ -11,7 +11,7 @@ interface ProjectThumbnailsProps {
 
 const ProjectThumbnails: React.FC<ProjectThumbnailsProps> = ({ projects, onSelect }) => {
   return (
-    <div className="space-y-10">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {projects.map((project) => (
         <div 
           key={project.id}
@@ -21,7 +21,7 @@ const ProjectThumbnails: React.FC<ProjectThumbnailsProps> = ({ projects, onSelec
           )}
           onClick={() => onSelect(project)}
         >
-          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl mb-5">
+          <div className="aspect-[16/9] w-full overflow-hidden rounded-lg mb-3">
             <img 
               src={project.imageUrl} 
               alt={project.title} 
@@ -31,16 +31,16 @@ const ProjectThumbnails: React.FC<ProjectThumbnailsProps> = ({ projects, onSelec
               )}
             />
           </div>
-          <h3 className="text-xl font-medium text-foreground font-serif">{project.title}</h3>
-          <p className="text-sm text-muted-foreground mt-1">{project.client}</p>
-          <div className="flex flex-wrap gap-1.5 mt-3">
+          <h3 className="text-base font-medium text-foreground font-serif">{project.title}</h3>
+          <p className="text-xs text-muted-foreground mt-1">{project.client}</p>
+          <div className="flex flex-wrap gap-1 mt-2">
             {project.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs px-2 py-1">
+              <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-0.5 text-[10px]">
                 {tag}
               </Badge>
             ))}
             {project.tags.length > 3 && (
-              <span className="text-xs text-muted-foreground">+{project.tags.length - 3}</span>
+              <span className="text-[10px] text-muted-foreground">+{project.tags.length - 3}</span>
             )}
           </div>
         </div>

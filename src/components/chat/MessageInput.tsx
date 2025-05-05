@@ -23,14 +23,14 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
   }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 md:p-8 border-t border-gray-100 flex gap-4">
+    <form onSubmit={handleSubmit} className="py-6 px-2 border-t border-gray-100/50 flex gap-4 items-end">
       <Textarea
         ref={inputRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Type something..."
         className={cn(
-          "resize-none min-h-[24px] max-h-32 text-lg bg-transparent",
+          "resize-none min-h-[24px] max-h-32 text-lg bg-transparent w-full",
           "border-none focus-visible:ring-0 p-0 shadow-none font-light"
         )}
         onKeyDown={(e) => {
@@ -40,6 +40,12 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
           }
         }}
         disabled={isLoading}
+        style={{ overflow: 'hidden' }}
+        onInput={(e) => {
+          const target = e.target as HTMLTextAreaElement;
+          target.style.height = '0px';
+          target.style.height = target.scrollHeight + 'px';
+        }}
       />
       <Button 
         type="submit" 

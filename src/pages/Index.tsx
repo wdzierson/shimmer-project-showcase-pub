@@ -9,7 +9,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-[#f9f9f7]">
       <HomeHeader />
       
-      <div className="flex flex-col lg:flex-row flex-grow px-6 md:px-16 lg:px-24 pt-36 pb-12 gap-16 max-w-[1400px] mx-auto">
+      <div className="flex flex-col lg:flex-row flex-grow px-4 md:px-8 lg:px-12 pt-36 pb-12 gap-12 max-w-[1400px] mx-auto">
         <HomeIntro />
         <div className="flex-1 min-w-0">
           <ChatInterface />

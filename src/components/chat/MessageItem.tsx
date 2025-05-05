@@ -12,15 +12,15 @@ interface MessageItemProps {
 
 const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
   return (
-    <div className="w-full mb-10">
-      <div className={`${message.sender === 'user' ? 'ml-auto max-w-[85%]' : 'mr-auto max-w-[85%]'}`}>
+    <div className="w-full mb-8">
+      <div className={`${message.sender === 'user' ? 'ml-auto max-w-[85%]' : 'mr-auto max-w-[90%]'}`}>
         <div className={cn(
           message.sender === 'user' ? 'text-right ml-auto' : 'text-left'
         )}>
           <p className={cn(
             "leading-relaxed",
             message.sender === 'user' 
-              ? 'text-foreground font-medium text-lg' 
+              ? 'text-foreground font-normal text-lg' 
               : 'text-foreground/90 text-xl font-light'
           )}>
             {message.content}
@@ -28,7 +28,7 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
         </div>
         
         {message.showProjects && message.projects && message.projects.length > 0 && (
-          <div className="mt-8">
+          <div className="mt-6">
             <ProjectThumbnails projects={message.projects} onSelect={onProjectSelect} />
           </div>
         )}
