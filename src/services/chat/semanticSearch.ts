@@ -1,4 +1,3 @@
-
 import { searchSimilarProjects } from '@/services/openai';
 import { getChatCompletion } from '@/services/openai';
 import { fetchProjects } from './projectFetcher';
@@ -19,6 +18,29 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
     console.log('Searching for relevant content entries first...');
     const contentEntries = await findRelevantContentEntries(userMessage);
     
+    // Also search for similar projects in parallel
+    const similarProjects = await searchSimilarProjects(userMessage);
+    
+    // Process similar projects first to see if we have project matches
+    let projectsToDisplay: Project[] = [];
+    let hasRelevantProjects = false;
+    
+    if (similarProjects && similarProjects.length > 0) {
+      console.log(`Found ${similarProjects.length} similar projects via RAG`);
+      
+      // Check if these are fallback results (similarity = 0)
+      const isFallbackResults = similarProjects.every(p => p.similarity === 0);
+      
+      // Get project IDs to fetch full project data
+      const projectIds = similarProjects.map(p => p.project_id);
+      projectsToDisplay = await fetchProjects(projectIds);
+      
+      if (projectsToDisplay.length > 0) {
+        hasRelevantProjects = !isFallbackResults;
+      }
+    }
+    
+    // If we have content entries, use them to generate a response
     if (contentEntries && contentEntries.length > 0) {
       console.log(`Found ${contentEntries.length} relevant content entries`);
       
@@ -43,67 +65,67 @@ export const findRelevantProjects = async (userMessage: string): Promise<{
         model: 'gpt-4o-mini'
       });
       
+      // If we also have projects to display, show them along with the AI response
+      if (projectsToDisplay.length > 0) {
+        console.log(`Including ${projectsToDisplay.length} projects with content response`);
+        return {
+          content: aiResponse,
+          projects: projectsToDisplay,
+          showProjects: true
+        };
+      }
+      
+      // Otherwise just return the AI response
       return {
         content: aiResponse,
         showProjects: false
       };
     }
     
-    // If no content entries found, fall back to project search
-    const similarProjects = await searchSimilarProjects(userMessage);
-    
-    if (similarProjects && similarProjects.length > 0) {
-      console.log(`Found ${similarProjects.length} similar projects via RAG`);
+    // If no content entries but we have project results
+    if (projectsToDisplay.length > 0) {
+      console.log(`Found ${projectsToDisplay.length} similar projects without content entries`);
       
-      // Check if these are fallback results (similarity = 0)
-      const isFallbackResults = similarProjects.every(p => p.similarity === 0);
-      
-      // Get project IDs to fetch full project data
-      const projectIds = similarProjects.map(p => p.project_id);
-      const projects = await fetchProjects(projectIds);
-      
-      if (projects.length > 0) {
-        if (isFallbackResults) {
-          // These are fallback results, so use a generic response
-          return {
-            content: "Here are some projects that might be of interest to you:",
-            projects,
-            showProjects: true
-          };
+      // Use OpenAI to generate a response based on the relevant projects if they're not fallback results
+      if (hasRelevantProjects) {
+        const context = similarProjects
+          .filter(p => p.content) // Only include projects with content
+          .map(p => p.content)
+          .join('\n\n');
+          
+        console.log('Generating AI response with context from similar projects');
+        
+        let aiResponse;
+        if (context) {
+          aiResponse = await getChatCompletion({
+            messages: [
+              {
+                role: 'system',
+                content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question concisely: ${context}`
+              },
+              {
+                role: 'user',
+                content: userMessage
+              }
+            ],
+            model: 'gpt-4o-mini'
+          });
         } else {
-          // Use OpenAI to generate a response based on the relevant projects
-          const context = similarProjects
-            .filter(p => p.content) // Only include projects with content
-            .map(p => p.content)
-            .join('\n\n');
-            
-          console.log('Generating AI response with context from similar projects');
-          
-          let aiResponse;
-          if (context) {
-            aiResponse = await getChatCompletion({
-              messages: [
-                {
-                  role: 'system',
-                  content: `You are a helpful portfolio assistant. Use the following project information to answer the user's question concisely: ${context}`
-                },
-                {
-                  role: 'user',
-                  content: userMessage
-                }
-              ],
-              model: 'gpt-4o-mini'
-            });
-          } else {
-            aiResponse = "I found some projects that might be relevant to your question:";
-          }
-          
-          return {
-            content: aiResponse,
-            projects,
-            showProjects: true
-          };
+          aiResponse = "I found some projects that might be relevant to your question:";
         }
+        
+        return {
+          content: aiResponse,
+          projects: projectsToDisplay,
+          showProjects: true
+        };
+      } else {
+        // These are fallback results
+        return {
+          content: "Here are some projects that might be of interest to you:",
+          projects: projectsToDisplay,
+          showProjects: true
+        };
       }
     }
 

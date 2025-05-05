@@ -16,8 +16,13 @@ export const processUserMessage = async (
 }> => {
   console.log('Processing user message:', userMessage);
   
-  // Check for the "show me recent work" or similar commands
+  // Check for explicit requests to see projects/portfolio/work
   const showProjectsRegex = /show\s+(?:me\s+)?(?:recent\s+)?(?:work|projects?|portfolio|all)/i;
+  const isProjectOrWorkMention = userMessage.toLowerCase().includes('project') || 
+                              userMessage.toLowerCase().includes('work') ||
+                              userMessage.toLowerCase().includes('portfolio');
+  
+  // Handle direct requests for showing projects
   if (
     showProjectsRegex.test(userMessage.toLowerCase()) ||
     userMessage.toLowerCase().includes('portfolio') ||
@@ -43,14 +48,16 @@ export const processUserMessage = async (
   
   // Try to use RAG to find relevant content or projects
   const semanticResults = await findRelevantProjects(userMessage);
-  if (semanticResults.content) {
+  
+  // If we got a meaningful result with either content or projects, return it
+  if (semanticResults.content && semanticResults.content !== "I don't currently have information that matches your specific question. Would you like to see my portfolio instead?") {
     return semanticResults;
   }
   
   // Extract potential keywords from the user message as a fallback
   const potentialKeywords = extractKeywords(userMessage);
   if (potentialKeywords.length > 0) {
-    // Try direct keyword search
+    // Try direct keyword search for projects
     const keywordMatchedProjects = await searchProjectsByKeywords(potentialKeywords);
     if (keywordMatchedProjects.length > 0) {
       console.log(`Found ${keywordMatchedProjects.length} projects matching keywords`);
@@ -64,11 +71,7 @@ export const processUserMessage = async (
   
   // If we reach here with no results yet, check if this is a general work-related query
   // and return all projects as a fallback
-  if (userMessage.toLowerCase().includes('work') ||
-      userMessage.toLowerCase().includes('project') ||
-      userMessage.toLowerCase().includes('portfolio') ||
-      userMessage.toLowerCase().includes('experience')) {
-    
+  if (isProjectOrWorkMention) {
     console.log('Work-related query detected, falling back to all projects');
     const allProjects = await fetchProjects();
     
