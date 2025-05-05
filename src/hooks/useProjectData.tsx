@@ -10,6 +10,7 @@ export interface ProjectFormData {
   client: string;
   description: string;
   imageUrl: string;
+  additionalImages: string[];
   liveUrl: string;
   involvement: string;
   tags: string[];
@@ -27,6 +28,7 @@ export const useProjectData = () => {
   const [client, setClient] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [liveUrl, setLiveUrl] = useState('');
   const [involvement, setInvolvement] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -77,16 +79,26 @@ export const useProjectData = () => {
         setClient(projectData.client);
         setDescription(projectData.description);
         
-        // Fetch primary image
+        // Fetch images
         const { data: imageData } = await supabase
           .from('project_images')
-          .select('image_url')
+          .select('image_url, is_primary, display_order')
           .eq('project_id', id)
-          .eq('is_primary', true)
-          .single();
+          .order('display_order', { ascending: true });
           
-        if (imageData) {
-          setImageUrl(imageData.image_url);
+        if (imageData && imageData.length > 0) {
+          // Find primary image
+          const primaryImage = imageData.find(img => img.is_primary);
+          if (primaryImage) {
+            setImageUrl(primaryImage.image_url);
+          }
+          
+          // Get additional images (non-primary)
+          const additionalImgs = imageData
+            .filter(img => !img.is_primary)
+            .map(img => img.image_url);
+            
+          setAdditionalImages(additionalImgs);
         }
         
         // Fetch tags
@@ -151,6 +163,8 @@ export const useProjectData = () => {
       setDescription,
       imageUrl,
       setImageUrl,
+      additionalImages,
+      setAdditionalImages,
       liveUrl,
       setLiveUrl,
       involvement,

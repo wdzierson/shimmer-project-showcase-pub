@@ -1,49 +1,129 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Badge } from '@/components/ui/badge';
 import ChatBot from '@/components/chat/ChatBot';
 import { Project } from '@/components/project/ProjectCard';
+import { supabase } from '@/integrations/supabase/client';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
-// Mock data for projects (will be replaced with Supabase data)
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    title: 'Included Health\'s Expert Physician Portal',
-    client: 'Included Health',
-    description: 'Physicians needed to evaluate patient conditions and make recommendations across a telehealth platform. They were accessing patient images in one of our existing interfaces.',
-    imageUrl: '/lovable-uploads/e818c6cd-0b7f-4e5a-a8b8-5a83f891d04c.png',
-    tags: ['UX Research', 'UI Design', 'Healthcare'],
-    createdAt: '2023-01-15',
-  },
-  {
-    id: '2',
-    title: 'Health Bridge Platform',
-    client: 'HealthBridge',
-    description: 'A platform connecting patients with healthcare providers for seamless virtual care experiences.',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3',
-    tags: ['UI Design', 'Frontend Development', 'Telehealth'],
-    createdAt: '2023-03-22',
-  },
-];
+interface ProjectWithImages extends Project {
+  additionalImages?: string[];
+}
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const project = mockProjects.find(p => p.id === id);
+  const [project, setProject] = useState<ProjectWithImages | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  if (!project) {
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch project data
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (projectError) {
+          console.error('Error fetching project:', projectError);
+          setError('Failed to load project');
+          setLoading(false);
+          return;
+        }
+        
+        if (!projectData) {
+          setError('Project not found');
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch images
+        const { data: imageData } = await supabase
+          .from('project_images')
+          .select('image_url, is_primary, display_order')
+          .eq('project_id', id)
+          .order('display_order', { ascending: true });
+          
+        let primaryImageUrl = '';
+        let additionalImages: string[] = [];
+          
+        if (imageData && imageData.length > 0) {
+          // Find primary image
+          const primaryImage = imageData.find(img => img.is_primary);
+          if (primaryImage) {
+            primaryImageUrl = primaryImage.image_url;
+          }
+            
+          // Get additional images (non-primary)
+          additionalImages = imageData
+            .filter(img => !img.is_primary)
+            .map(img => img.image_url);
+        }
+        
+        // Fetch tags
+        const { data: tagData } = await supabase
+          .from('project_tags')
+          .select('tags(name)')
+          .eq('project_id', id);
+        
+        const tags = tagData ? tagData.map(item => item.tags.name) : [];
+        
+        // Create complete project object
+        const completeProject: ProjectWithImages = {
+          id: projectData.id,
+          title: projectData.title,
+          client: projectData.client,
+          description: projectData.description,
+          imageUrl: primaryImageUrl,
+          additionalImages: additionalImages,
+          tags: tags,
+          createdAt: projectData.created_at,
+        };
+        
+        setProject(completeProject);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching project details:', err);
+        setError('An unexpected error occurred');
+        setLoading(false);
+      }
+    };
+    
+    fetchProjectData();
+  }, [id]);
+
+  if (loading) {
     return (
       <div>
         <Header />
-        <div className="container mx-auto pt-24 px-4 md:px-6">
-          <h1 className="text-2xl font-bold mt-8">Project not found</h1>
+        <div className="container mx-auto pt-24 px-4 md:px-6 flex justify-center">
+          <div className="text-lg">Loading project details...</div>
         </div>
         <Footer />
       </div>
     );
   }
+  
+  if (error || !project) {
+    return (
+      <div>
+        <Header />
+        <div className="container mx-auto pt-24 px-4 md:px-6">
+          <h1 className="text-2xl font-bold mt-8">{error || 'Project not found'}</h1>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const hasMultipleImages = project.additionalImages && project.additionalImages.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -74,11 +154,45 @@ const ProjectDetail = () => {
             </div>
             
             <div className="rounded-md overflow-hidden mb-12">
-              <img 
-                src={project.imageUrl} 
-                alt={project.title} 
-                className="w-full h-auto"
-              />
+              {hasMultipleImages ? (
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {/* Main image */}
+                    <CarouselItem>
+                      <div className="p-1">
+                        <img 
+                          src={project.imageUrl} 
+                          alt={project.title} 
+                          className="w-full h-auto object-cover rounded-md"
+                        />
+                      </div>
+                    </CarouselItem>
+                    
+                    {/* Additional images */}
+                    {project.additionalImages?.map((imageUrl, index) => (
+                      <CarouselItem key={`additional-image-${index}`}>
+                        <div className="p-1">
+                          <img 
+                            src={imageUrl} 
+                            alt={`${project.title} - ${index + 1}`} 
+                            className="w-full h-auto object-cover rounded-md"
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <div className="flex justify-center mt-2">
+                    <CarouselPrevious className="relative translate-y-0 left-0 mr-2" />
+                    <CarouselNext className="relative translate-y-0 right-0" />
+                  </div>
+                </Carousel>
+              ) : (
+                <img 
+                  src={project.imageUrl} 
+                  alt={project.title} 
+                  className="w-full h-auto"
+                />
+              )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">

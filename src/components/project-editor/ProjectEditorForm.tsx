@@ -18,6 +18,8 @@ interface ProjectEditorFormProps {
   setDescription: (value: string) => void;
   imageUrl: string;
   setImageUrl: (value: string) => void;
+  additionalImages: string[];
+  setAdditionalImages: (value: string[]) => void;
   liveUrl: string;
   setLiveUrl: (value: string) => void;
   involvement: string;
@@ -43,6 +45,8 @@ const ProjectEditorForm = ({
   setDescription,
   imageUrl,
   setImageUrl,
+  additionalImages,
+  setAdditionalImages,
   liveUrl,
   setLiveUrl,
   involvement,
@@ -81,6 +85,8 @@ const ProjectEditorForm = ({
       <ProjectImageUpload 
         imageUrl={imageUrl}
         setImageUrl={setImageUrl}
+        additionalImages={additionalImages}
+        setAdditionalImages={setAdditionalImages}
       />
       
       <ProjectTagsField

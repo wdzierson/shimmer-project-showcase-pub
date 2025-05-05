@@ -10,6 +10,7 @@ export interface ProjectSubmitData {
   client: string;
   description: string;
   imageUrl: string;
+  additionalImages?: string[];
   liveUrl?: string;
   involvement?: string;
   tags: string[];
@@ -22,6 +23,7 @@ export const saveProject = async ({
   client,
   description,
   imageUrl,
+  additionalImages = [],
   liveUrl = '',
   involvement = '',
   tags,
@@ -120,42 +122,64 @@ export const saveProject = async ({
       }
     }
     
-    // Save primary image
-    if (imageUrl) {
-      // Check if image record exists
-      const { data: existingImages } = await supabase
+    // Handle images
+    // First, get existing images for non-new projects
+    let existingImages: { id: string, is_primary: boolean, image_url: string }[] = [];
+    if (!isNew) {
+      const { data: currentImages } = await supabase
         .from('project_images')
-        .select('id')
-        .eq('project_id', projectId)
-        .eq('is_primary', true)
-        .limit(1);
+        .select('id, is_primary, image_url')
+        .eq('project_id', projectId);
         
-      if (existingImages && existingImages.length > 0) {
-        // Update existing image
-        const { error: imageError } = await supabase
-          .from('project_images')
-          .update({ image_url: imageUrl })
-          .eq('id', existingImages[0].id);
-          
-        if (imageError) {
-          console.error('Error updating image:', imageError);
-          throw imageError;
-        }
-      } else {
-        // Insert new image
-        const { error: imageError } = await supabase
-          .from('project_images')
-          .insert({
-            project_id: projectId,
-            image_url: imageUrl,
-            is_primary: true,
-            display_order: 0
-          });
-          
-        if (imageError) {
-          console.error('Error saving image:', imageError);
-          throw imageError;
-        }
+      if (currentImages) {
+        existingImages = currentImages;
+      }
+      
+      // Delete all existing images first
+      const { error: deleteImagesError } = await supabase
+        .from('project_images')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (deleteImagesError) {
+        console.error('Error deleting existing images:', deleteImagesError);
+        throw deleteImagesError;
+      }
+    }
+    
+    // Save primary image if provided
+    if (imageUrl) {
+      const { error: primaryImageError } = await supabase
+        .from('project_images')
+        .insert({
+          project_id: projectId,
+          image_url: imageUrl,
+          is_primary: true,
+          display_order: 0
+        });
+        
+      if (primaryImageError) {
+        console.error('Error saving primary image:', primaryImageError);
+        throw primaryImageError;
+      }
+    }
+    
+    // Save additional images
+    if (additionalImages && additionalImages.length > 0) {
+      const additionalImagesData = additionalImages.map((url, index) => ({
+        project_id: projectId,
+        image_url: url,
+        is_primary: false,
+        display_order: index + 1
+      }));
+      
+      const { error: additionalImagesError } = await supabase
+        .from('project_images')
+        .insert(additionalImagesData);
+        
+      if (additionalImagesError) {
+        console.error('Error saving additional images:', additionalImagesError);
+        throw additionalImagesError;
       }
     }
     

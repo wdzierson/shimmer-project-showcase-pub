@@ -52,6 +52,7 @@ const ProjectEditor = () => {
         client: projectData.client,
         description: projectData.description,
         imageUrl: projectData.imageUrl,
+        additionalImages: projectData.additionalImages,
         liveUrl: projectData.liveUrl,
         involvement: projectData.involvement,
         tags: projectData.tags,
@@ -94,6 +95,8 @@ const ProjectEditor = () => {
               setDescription={projectData.setDescription}
               imageUrl={projectData.imageUrl}
               setImageUrl={projectData.setImageUrl}
+              additionalImages={projectData.additionalImages}
+              setAdditionalImages={projectData.setAdditionalImages}
               liveUrl={projectData.liveUrl}
               setLiveUrl={projectData.setLiveUrl}
               involvement={projectData.involvement}

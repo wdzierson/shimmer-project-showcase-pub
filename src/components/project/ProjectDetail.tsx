@@ -3,7 +3,8 @@ import React from 'react';
 import { Project } from '@/components/project/ProjectCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, X } from 'lucide-react';
+import { ChevronLeft, X, ChevronRight } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 interface ProjectDetailProps {
   project: Project;
@@ -11,6 +12,9 @@ interface ProjectDetailProps {
 }
 
 const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose }) => {
+  // Check if project has multiple images
+  const hasMultipleImages = Array.isArray(project.additionalImages) && project.additionalImages.length > 0;
+  
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b flex items-center justify-between">
@@ -27,11 +31,43 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose }) => {
       
       <div className="flex-grow overflow-y-auto p-4">
         <div className="space-y-6">
-          <img 
-            src={project.imageUrl} 
-            alt={project.title} 
-            className="w-full aspect-video object-cover rounded-md"
-          />
+          {hasMultipleImages ? (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {/* Main image */}
+                <CarouselItem>
+                  <div className="p-1">
+                    <img 
+                      src={project.imageUrl} 
+                      alt={project.title} 
+                      className="w-full aspect-video object-cover rounded-md"
+                    />
+                  </div>
+                </CarouselItem>
+                
+                {/* Additional images */}
+                {project.additionalImages?.map((imageUrl, index) => (
+                  <CarouselItem key={`additional-image-${index}`}>
+                    <div className="p-1">
+                      <img 
+                        src={imageUrl} 
+                        alt={`${project.title} - ${index + 1}`} 
+                        className="w-full aspect-video object-cover rounded-md"
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
+            </Carousel>
+          ) : (
+            <img 
+              src={project.imageUrl} 
+              alt={project.title} 
+              className="w-full aspect-video object-cover rounded-md"
+            />
+          )}
           
           <div>
             <div className="text-sm text-muted-foreground mb-1">CLIENT</div>

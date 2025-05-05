@@ -1,23 +1,28 @@
-
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Images, Gallery } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 interface ProjectImageUploadProps {
   imageUrl: string;
   setImageUrl: (value: string) => void;
+  additionalImages: string[];
+  setAdditionalImages: (value: string[]) => void;
 }
 
 const ProjectImageUpload = ({
   imageUrl,
-  setImageUrl
+  setImageUrl,
+  additionalImages,
+  setAdditionalImages
 }: ProjectImageUploadProps) => {
   // Create a reference to the hidden file input
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Function to trigger the hidden file input
   const handleUploadClick = () => {
@@ -44,6 +49,7 @@ const ProjectImageUpload = ({
     }
     
     try {
+      setIsUploading(true);
       toast.info('Uploading image...');
       
       // Generate a unique filename
@@ -71,7 +77,13 @@ const ProjectImageUpload = ({
         .getPublicUrl(filePath);
       
       // Set the image URL
-      setImageUrl(publicUrlData.publicUrl);
+      if (!imageUrl) {
+        // If no primary image, set this as primary
+        setImageUrl(publicUrlData.publicUrl);
+      } else {
+        // Otherwise add to additional images
+        setAdditionalImages([...additionalImages, publicUrlData.publicUrl]);
+      }
       toast.success('Image uploaded successfully');
       
     } catch (error) {
@@ -82,54 +94,130 @@ const ProjectImageUpload = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      setIsUploading(false);
     }
   };
 
+  // Function to remove an additional image
+  const handleRemoveAdditionalImage = (index: number) => {
+    const newImages = [...additionalImages];
+    newImages.splice(index, 1);
+    setAdditionalImages(newImages);
+  };
+
+  // Function to make an additional image the primary image
+  const handleMakePrimary = (imageUrl: string, index: number) => {
+    // Add current primary to additional images
+    const newAdditionalImages = [...additionalImages];
+    if (imageUrl) {
+      newAdditionalImages.push(imageUrl);
+    }
+    
+    // Remove the selected image from additional
+    newAdditionalImages.splice(index, 1);
+    
+    // Set the selected image as primary
+    setImageUrl(additionalImages[index]);
+    setAdditionalImages(newAdditionalImages);
+    toast.success('Set as primary image');
+  };
+
+  const hasImages = imageUrl || additionalImages.length > 0;
+
   return (
-    <div className="space-y-2">
-      <Label>Project Image</Label>
-      <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center">
-        {imageUrl ? (
-          <div className="space-y-4">
-            <div className="relative w-full max-w-md mx-auto">
-              <img 
-                src={imageUrl} 
-                alt="Project preview" 
-                className="w-full h-auto rounded-md"
-              />
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                className="absolute -top-2 -right-2 rounded-full"
-                onClick={() => setImageUrl('')}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              To replace, upload a new image
-            </p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Label>Project Images</Label>
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm" 
+          onClick={handleUploadClick}
+          disabled={isUploading}
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          Upload Image
+        </Button>
+        <Input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={handleFileUpload}
+          disabled={isUploading}
+        />
+      </div>
+
+      <div className="border rounded-md p-4">
+        {hasImages ? (
+          <div className="space-y-6">
+            {/* Primary image */}
+            {imageUrl && (
+              <div>
+                <div className="text-sm text-muted-foreground mb-2">Primary Image</div>
+                <div className="relative w-full mb-4">
+                  <img 
+                    src={imageUrl} 
+                    alt="Primary project image" 
+                    className="w-full max-h-64 object-contain rounded-md"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 rounded-full"
+                    onClick={() => setImageUrl('')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Additional images */}
+            {additionalImages.length > 0 && (
+              <div>
+                <div className="text-sm text-muted-foreground mb-2">Additional Images</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {additionalImages.map((img, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={img} 
+                        alt={`Additional image ${index + 1}`} 
+                        className="w-full h-40 object-cover rounded-md"
+                      />
+                      <div className="absolute -top-2 -right-2 flex gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon"
+                          className="rounded-full"
+                          onClick={() => handleMakePrimary(imageUrl, index)}
+                          title="Make primary"
+                        >
+                          <Images className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="rounded-full"
+                          onClick={() => handleRemoveAdditionalImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="py-10">
-            <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-2">Drag and drop an image, or click to browse</p>
-            <p className="text-xs text-muted-foreground mb-4">PNG, JPG or WebP (max 5MB)</p>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleUploadClick}
-            >
-              Select Image
-            </Button>
-            <Input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleFileUpload}
-            />
+          <div className="py-10 text-center">
+            <Gallery className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground mb-2">Upload images for your project</p>
+            <p className="text-xs text-muted-foreground mb-4">PNG, JPG or WebP (max 5MB per image)</p>
           </div>
         )}
       </div>
