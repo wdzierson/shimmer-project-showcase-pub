@@ -2,10 +2,11 @@
 import React from 'react';
 
 interface ProjectInfoSectionsProps {
-  // No specific props needed at this level
+  year?: number;
+  createdAt?: string;
 }
 
-const ProjectInfoSections: React.FC<ProjectInfoSectionsProps> = () => {
+const ProjectInfoSections: React.FC<ProjectInfoSectionsProps> = ({ year, createdAt }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
       <div className="col-span-1">
