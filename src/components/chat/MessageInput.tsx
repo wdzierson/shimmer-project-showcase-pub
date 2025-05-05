@@ -31,7 +31,7 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
         ref={inputRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type something..."
+        placeholder="Ask something..."
         className={cn(
           "resize-none min-h-[24px] max-h-32 text-lg bg-transparent w-full",
           "border-none focus-visible:ring-0 p-0 shadow-none font-light"
