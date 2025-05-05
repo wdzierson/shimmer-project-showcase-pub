@@ -142,7 +142,7 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-9rem)] flex flex-col overflow-hidden bg-background">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-background">
       <div className="flex flex-col h-full">
         <div className="flex-grow overflow-hidden relative">
           <ScrollArea className="h-full pr-4">
