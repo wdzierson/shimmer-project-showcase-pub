@@ -13,7 +13,8 @@ const Index = () => {
         <div className="flex-none lg:w-[380px] pt-24 pb-12 flex flex-col h-full">
           <HomeIntro />
         </div>
-        <div className="flex-1 min-w-0 pt-24 pb-0">
+        {/* Added gap-10 (40px) between columns */}
+        <div className="lg:ml-10 flex-1 min-w-0 pt-24 pb-0">
           <ChatInterface />
         </div>
       </div>
