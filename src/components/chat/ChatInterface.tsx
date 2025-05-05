@@ -75,7 +75,7 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-white border border-gray-200/60 rounded-2xl shadow-sm">
       {selectedProject ? (
         <ProjectDetail project={selectedProject} onClose={handleCloseProjectDetail} />
       ) : (

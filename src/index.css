@@ -1,5 +1,4 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -98,15 +97,15 @@
   }
   
   .portfolio-heading {
-    @apply text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight;
+    @apply text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight font-serif;
   }
   
   .portfolio-subheading {
-    @apply text-2xl md:text-3xl font-medium text-muted-foreground;
+    @apply text-2xl md:text-3xl font-medium text-muted-foreground font-serif;
   }
   
   .case-study-title {
-    @apply text-3xl md:text-4xl font-medium;
+    @apply text-3xl md:text-4xl font-medium font-serif;
   }
   
   .case-study-section {
@@ -129,4 +128,3 @@
     font-family: 'IBM Plex Mono', monospace;
   }
 }
-
