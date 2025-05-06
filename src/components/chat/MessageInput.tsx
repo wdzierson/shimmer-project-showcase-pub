@@ -33,8 +33,8 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Ask something..."
         className={cn(
-          "resize-none min-h-[24px] max-h-32 text-lg bg-transparent w-full",
-          "border-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-0 shadow-none font-light"
+          "resize-none min-h-[24px] max-h-32 text-lg bg-white w-full rounded-md",
+          "border border-gray-200 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none p-3 shadow-sm font-light"
         )}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
