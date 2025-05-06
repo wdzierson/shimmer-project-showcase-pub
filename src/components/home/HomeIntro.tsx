@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Github } from 'lucide-react';
@@ -42,7 +43,7 @@ const HomeIntro = () => {
           </p>
           
           <p>
-            I am a designer and technologist, having always sat at the intersection of both. I love to design, and I also love to build. AI has unlocked an entire new world in these regards, and it's very exciting to think about what comes next. If you'd like to be in touch, please find me on LinkedIn and send a message.
+            I am a designer and technologist, having always sat at the intersection of both. I love to design, and I also love to build.
           </p>
         </div>
       </div>
