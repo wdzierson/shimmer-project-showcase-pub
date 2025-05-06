@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Mail } from 'lucide-react';
+import { Send, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MessageInputProps {
@@ -28,9 +28,6 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
       className="sticky bottom-0 py-6 px-4 border-t border-gray-300 flex gap-4 items-end bg-background shadow-md"
     >
       <div className="relative flex-1">
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-          <Mail size={20} />
-        </div>
         <Textarea
           ref={inputRef}
           value={message}
@@ -64,7 +61,7 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
         )}
         disabled={isLoading}
       >
-        <Send size={24} />
+        <ArrowRight size={24} />
       </Button>
     </form>
   );
