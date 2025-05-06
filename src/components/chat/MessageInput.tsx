@@ -34,7 +34,7 @@ const MessageInput = ({ message, setMessage, handleSubmit, isLoading }: MessageI
         placeholder="Ask something..."
         className={cn(
           "resize-none min-h-[24px] max-h-32 text-lg bg-transparent w-full",
-          "border-none focus-visible:ring-0 focus-visible:outline-none p-0 shadow-none font-light"
+          "border-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-0 shadow-none font-light"
         )}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {

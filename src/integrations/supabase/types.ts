@@ -225,6 +225,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_prompts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          response_content: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          response_content?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          response_content?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

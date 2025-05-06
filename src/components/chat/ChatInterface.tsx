@@ -6,6 +6,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { Message } from '@/types/chat';
 import { processUserMessage } from '@/services/chatService';
+import { savePrompt } from '@/services/promptTrackingService';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -77,6 +78,9 @@ const ChatInterface = () => {
       };
       
       setMessages((prev) => [...prev, botResponse]);
+      
+      // Save the prompt and response to the database
+      await savePrompt(message, response.content);
     } catch (error) {
       console.error('Error processing message:', error);
       
@@ -94,6 +98,9 @@ const ChatInterface = () => {
       };
       
       setMessages((prev) => [...prev, errorResponse]);
+      
+      // Still save the prompt with error info
+      await savePrompt(message, "Error processing request");
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +130,9 @@ const ChatInterface = () => {
         };
         
         setMessages((prev) => [...prev, botResponse]);
+        
+        // Save the prompt and response to the database
+        savePrompt(suggestionText, response.content);
       })
       .catch(error => {
         console.error('Error processing suggestion:', error);
@@ -141,6 +151,9 @@ const ChatInterface = () => {
         };
         
         setMessages((prev) => [...prev, errorResponse]);
+        
+        // Still save the prompt with error info
+        savePrompt(suggestionText, "Error processing request");
       })
       .finally(() => {
         setIsLoading(false);

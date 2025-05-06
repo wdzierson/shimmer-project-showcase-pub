@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Newspaper, FolderOpen, MessageSquare } from 'lucide-react';
 
 const Admin = () => {
   // In a real implementation, this would check for authentication
@@ -43,7 +43,10 @@ const Admin = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Projects</CardTitle>
+              <CardTitle className="flex items-center">
+                <FolderOpen className="mr-2 h-5 w-5" />
+                Projects
+              </CardTitle>
               <CardDescription>Manage your portfolio projects</CardDescription>
             </CardHeader>
             <CardContent>
@@ -55,7 +58,10 @@ const Admin = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Content</CardTitle>
+              <CardTitle className="flex items-center">
+                <Newspaper className="mr-2 h-5 w-5" />
+                Content
+              </CardTitle>
               <CardDescription>Manage personal info and chat content</CardDescription>
             </CardHeader>
             <CardContent>
@@ -67,12 +73,15 @@ const Admin = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Settings</CardTitle>
-              <CardDescription>Configure your portfolio settings</CardDescription>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="mr-2 h-5 w-5" />
+                User Prompts
+              </CardTitle>
+              <CardDescription>View user chat history and prompts</CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link to="/admin/settings">Manage Settings</Link>
+                <Link to="/admin/prompts">View Prompts</Link>
               </Button>
             </CardContent>
           </Card>

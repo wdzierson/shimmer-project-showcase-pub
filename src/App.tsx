@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import AdminProjects from "./pages/AdminProjects"; 
 import AdminContent from "./pages/AdminContent";
+import AdminPrompts from "./pages/AdminPrompts";
 import ProjectEditor from "./pages/ProjectEditor";
 import ContentEditor from "./pages/ContentEditor";
 import NotFound from "./pages/NotFound";
@@ -67,6 +68,7 @@ const App = () => {
             <Route path="/admin/project/:id" element={<ProjectEditor />} />
             <Route path="/admin/content" element={<AdminContent />} />
             <Route path="/admin/content/:id" element={<ContentEditor />} />
+            <Route path="/admin/prompts" element={<AdminPrompts />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import MessageItem from './MessageItem';
 import { Message } from '@/types/chat';
