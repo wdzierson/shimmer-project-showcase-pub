@@ -10,3 +10,4 @@ export { processUserMessage };
 // Re-export the supporting functions for use elsewhere in the application
 export { extractKeywords } from './chat/extractKeywords';
 export { fetchProjects, searchProjectsByKeywords } from './chat/projectFetcher';
+export { findRelevantProjects, findRelevantContentEntries } from './chat/semanticSearch';
