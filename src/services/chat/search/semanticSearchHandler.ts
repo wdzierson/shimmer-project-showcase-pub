@@ -1,8 +1,12 @@
+
 import { searchSimilarProjects } from '@/services/openai';
 import { getChatCompletion } from '@/services/openai';
 import { fetchProjects } from '../projectFetcher';
 import { Project } from '@/components/project/ProjectCard';
 import { findRelevantContentEntries } from './contentSearch';
+
+// Re-export the content search function
+export { findRelevantContentEntries };
 
 /**
  * Uses RAG (Retrieval-Augmented Generation) to find semantically relevant projects
