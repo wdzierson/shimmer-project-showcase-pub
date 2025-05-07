@@ -5,6 +5,7 @@ import ProjectThumbnails from '@/components/project/ProjectThumbnails';
 import { Project } from '@/components/project/ProjectCard';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import ReactMarkdown from 'react-markdown';
 
 interface MessageItemProps {
   message: Message;
@@ -22,14 +23,15 @@ const MessageItem = ({ message, onProjectSelect }: MessageItemProps) => {
         <div className={cn(
           message.sender === 'user' ? 'text-right ml-auto' : 'text-left'
         )}>
-          <p className={cn(
-            "leading-relaxed",
-            message.sender === 'user' 
-              ? 'text-foreground font-normal text-lg' 
-              : 'text-foreground/90 text-xl font-light'
-          )}>
-            {message.content}
-          </p>
+          {message.sender === 'user' ? (
+            <p className="text-foreground font-normal text-lg leading-relaxed">
+              {message.content}
+            </p>
+          ) : (
+            <div className="text-foreground/90 text-xl font-light prose prose-sm max-w-none prose-headings:font-medium prose-p:leading-relaxed prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded">
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+            </div>
+          )}
           
           <p className={cn(
             "text-xs text-muted-foreground mt-2",

@@ -9,4 +9,5 @@ export interface Message {
   showProjects?: boolean;
   projects?: Project[];
   suggestions?: { text: string; delay: number }[];
+  isMarkdown?: boolean; // Optional flag to indicate if content contains markdown
 }
