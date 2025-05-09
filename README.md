@@ -1,9 +1,9 @@
 # Chatbot-based Portfolio Starter
 
-Hi everyone! I built this as a fun way to update my portfolio and make it a little more fun to browse & work with. I'll be improving it over time. A couple of notes:
-- All of the code here is directly from Lovable, so if you plan to use it, it might be easier to just use the Lovable link (below) and refactor from there to make it your own
-- You'll need to sign up for Supabase in order for this project to work, and to have an OpenAI key
-- Please for the project on Lovable if you use the Lovable link
+Hi folks! This is a basic chat-based implementation of a portfolio site which inclides a mini-CMS (built on top of Supabase). A couple of notes:
+- Visitors to your site will be able to ask about your portfolio work and other personal info about you, which you can add via the mini-CMS. 
+- You'll need to sign up for Supabase in order for this project to work. You'lll also need to have an OpenAI API key (head to https://platform.openai.com/ to get one.)
+- Because this project uses Supabase in the background, you can't "Remix" it on Lovable. You'll need to clone this repo and point Lovable to your clone. This should work to get everything up and running.
 - Have fun!
 
 # Welcome to your Lovable project
