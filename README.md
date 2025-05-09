@@ -1,3 +1,11 @@
+# Chatbot-based Portfolio Starter
+
+Hi everyone! I built this as a fun way to update my portfolio and make it a little more fun to browse & work with. I'll be improving it over time. A couple of notes:
+- All of the code here is directly from Lovable, so if you plan to use it, it might be easier to just use the Lovable link (below) and refactor from there to make it your own
+- You'll need to sign up for Supabase in order for this project to work, and to have an OpenAI key
+- Please for the project on Lovable if you use the Lovable link
+- Have fun!
+
 # Welcome to your Lovable project
 
 ## Project info
